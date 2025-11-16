@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     
     // Conecta ao servidor da Raspadinha (que está em outra porta ou URL)
-    // --- INÍCIO DA CORREÇÃO ---
     let socket;
     try {
         socket = io();
@@ -13,15 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
         console.error("Erro ao conectar ao Socket.IO (Raspadinha):", err);
         alert("Erro de conexão com o servidor. Recarregue a página.");
-        // Trava os botões de compra se o socket falhar
         const btnComprar = document.getElementById('btn-comprar-raspadinha');
         if (btnComprar) {
             btnComprar.disabled = true;
             btnComprar.textContent = "Erro de Conexão";
         }
     }
-    // --- FIM DA CORREÇÃO ---
-
 
     // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 2.00; // Padrão
@@ -134,12 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Telefone inválido. Insira DDD + Número (só números)."); return;
             }
 
-            // --- INÍCIO DA CORREÇÃO ---
             if (!socket || !socket.id) {
                 alert("Erro de conexão. Por favor, recarregue a página e tente novamente.");
                 return;
             }
-            // --- FIM DA CORREÇÃO ---
 
             btnGerarPix.textContent = "Gerando..."; 
             btnGerarPix.disabled = true;
@@ -201,9 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. OUVINTES DO SOCKET.IO (APROVAÇÃO)
     // ==========================================================
 
-    // --- INÍCIO DA CORREÇÃO ---
     if (socket) {
-    // --- FIM DA CORREÇÃO ---
 
         socket.on('connect', () => {
             console.log(`Conectado ao servidor Socket.IO com ID: ${socket.id}`);
@@ -227,9 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // ==========================================================
+        // --- INÍCIO DA CORREÇÃO ---
+        // ==========================================================
         // OUVINTE PRINCIPAL! O servidor avisa que o pagamento foi aprovado.
         socket.on('pagamentoAprovado', (data) => {
             // Verifica se o pagamento aprovado é o que estamos esperando
+            // O 'data' AGORA CONTÉM { paymentId: "...", valorPremio: 0.00 }
             if (data.paymentId === currentPaymentId) {
                 console.log("Meu pagamento foi aprovado!", data);
                 
@@ -243,37 +239,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 3. Mostra o card do jogo
                 if (cardJogo) cardJogo.style.display = 'block';
 
-                // 4. Inicia a "raspagem"
-                iniciarRaspadinha(currentPaymentId);
+                // 4. Inicia a "raspagem" PASSANDO O PRÊMIO que o servidor já nos enviou
+                // Isso evita a "condição de corrida"
+                iniciarRaspadinha(data.valorPremio); 
             }
         });
+        // ==========================================================
+        // --- FIM DA CORREÇÃO ---
+        // ==========================================================
 
-    // --- INÍCIO DA CORREÇÃO ---
     } // Fecha o "if (socket)"
-    // --- FIM DA CORREÇÃO ---
 
     // ==========================================================
     // 4. LÓGICA DO JOGO (RASPADINHA)
     // ==========================================================
 
-    async function iniciarRaspadinha(paymentId) {
+    // ==========================================================
+    // --- INÍCIO DA CORREÇÃO ---
+    // ==========================================================
+    // A função agora recebe o 'valorPremio' direto, e não precisa mais do 'paymentId'
+    // Ela também não é mais 'async' e não faz 'fetch'
+    function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
         try {
-            // 1. Busca o prêmio que o servidor JÁ SORTEOU
-            const response = await fetch('/api/raspadinha/meu-premio', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ paymentId: paymentId }),
-            });
-            
-            if (!response.ok) throw new Error('Não foi possível buscar o prêmio.');
-            
-            const data = await response.json();
-            if (!data.success) throw new Error(data.message || 'Erro ao buscar prêmio.');
-
-            // 2. Configura o prêmio "escondido"
-            const valorPremio = parseFloat(data.valorPremio);
+            // 1. Configura o prêmio "escondido" (o valor já veio do socket)
             if (valorPremio > 0) {
                 raspadinhaFundo.classList.remove('nao-ganhou');
                 raspadinhaTextoPremio.textContent = formatarBRL(valorPremio);
@@ -282,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 raspadinhaTextoPremio.textContent = "Não foi dessa vez!";
             }
 
-            // 3. Inicializa a biblioteca ScratchCard
+            // 2. Inicializa a biblioteca ScratchCard
             const sc = new ScratchCard('#raspadinha-container', {
                 scratchType: SCRATCH_TYPE.LINE,
                 containerWidth: raspadinhaContainer.clientWidth,
@@ -305,14 +295,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Inicia a raspadinha
-            sc.init();
+            sc.init().then(() => {
+                console.log("Raspadinha iniciada com sucesso.");
+            }).catch((err) => {
+                // Isso vai pegar se a imagem 'imagem-raspadinha.png' falhar
+                throw new Error(`Falha ao carregar imagem da raspadinha: ${err.message}`);
+            });
 
         } catch (err) {
+            // Se qualquer coisa der errado (buscar prêmio, iniciar raspadinha), caímos aqui
             console.error("Erro ao iniciar raspadinha:", err);
             raspadinhaStatus.textContent = "Erro ao carregar seu jogo. Atualize a página.";
             raspadinhaStatus.style.color = "red";
         }
     }
+    // ==========================================================
+    // --- FIM DA CORREÇÃO ---
+    // ==========================================================
 
 
     // ==========================================================
