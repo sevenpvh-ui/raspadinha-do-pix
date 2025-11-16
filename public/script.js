@@ -287,6 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Limpa o ID pendente
                 sessionStorage.removeItem('raspadinha_payment_id');
                 
+                // ==================================================
+                // --- INÍCIO DA CORREÇÃO (BUG do Modal) ---
+                // ==================================================
+                fecharModal(); // <-- ADICIONAMOS ESTA LINHA
+                // ==================================================
+                // --- FIM DA CORREÇÃO ---
+                // ==================================================
+
                 // Pula para a tela de jogo
                 if (cardComprar) cardComprar.style.display = 'none';
                 if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
