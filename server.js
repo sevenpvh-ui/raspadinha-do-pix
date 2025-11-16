@@ -73,15 +73,11 @@ async function inicializarBanco() {
             );
         `);
 
-        // Tabela de Sessões (usada pelo connect-pg-simple)
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS "sessions" (
-              "sid" varchar NOT NULL COLLATE "default",
-              "sess" json NOT NULL,
-              "expire" timestamp(6) NOT NULL
-            ) WITH (OIDS=FALSE);
-            ALTER TABLE "sessions" ADD CONSTRAINT "sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
-        `);
+        // ==========================================================
+        // --- INÍCIO DA CORREÇÃO ---
+        // As linhas abaixo, que criavam a tabela "sessions", foram REMOVIDAS.
+        // A biblioteca 'connect-pg-simple' fará isso automaticamente.
+        // ==========================================================
         
         // Tabela de Pagamentos Pendentes
         await db.query(`
@@ -159,7 +155,7 @@ if (!MERCADOPAGO_WEBHOOK_SECRET) console.warn("AVISO: MERCADOPAGO_WEBHOOK_SECRET
 // ==========================================================
 const store = new PgStore({
     pool: pool,
-    tableName: 'sessions',
+    tableName: 'sessions', // O nome da tabela DEVE ser "sessions"
     pruneSessionInterval: 60
 });
 const SESSION_SECRET = process.env.SESSION_SECRET_RASPADINHA || 'segredo_diferente_para_raspadinha!';
@@ -502,13 +498,15 @@ function checkAdmin(req, res, next) {
     }
     
     // Se não está logado, checa se é um pedido de API (fetch)
-    const isApiRequest = req.headers['accept'] && req.headers['accept'].includes('application/json');
+    const isApiRequest = req.headers['accept'] && (req.headers['accept'].includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest');
     
     if (isApiRequest) {
         // Se foi uma API, retorna um erro JSON 403 (Proibido)
+        console.warn(`Acesso negado à API admin (sessão expirada?) IP: ${req.ip}`);
         return res.status(403).json({ success: false, message: 'Acesso negado. Sua sessão expirou.' });
     } else {
         // Se foi uma navegação normal (ex: F5 na página), redireciona para o login HTML
+        console.warn(`Acesso negado à página admin (sem sessão). IP: ${req.ip}`);
         return res.redirect('/admin/login.html');
     }
 }
