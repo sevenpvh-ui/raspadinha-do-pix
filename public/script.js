@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // INICIALIZAÇÃO E SELETORES
     // ==========================================================
     
-    // Conecta ao servidor da Raspadinha (que está em outra porta ou URL)
     let socket;
     try {
         socket = io();
@@ -22,7 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 2.00; // Padrão
     let PREMIO_MAXIMO_ATUAL = 100.00; // Padrão
-    let currentPaymentId = null; // Guarda o ID do pagamento atual
+    
+    // ==================================================
+    // --- INÍCIO DA CORREÇÃO ---
+    // let currentPaymentId = null; // Removido
+    // AGORA USAMOS SESSIONSTORAGE para sobreviver a reloads
+    // ==================================================
 
     // --- Seletores do DOM (Página Principal) ---
     const cardComprar = document.getElementById('card-comprar-raspadinha');
@@ -115,7 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btnGerarPix.disabled = false; 
             btnGerarPix.textContent = "Gerar PIX"; 
         }
-        currentPaymentId = null; // Limpa o ID de pagamento
+        // ==================================================
+        // --- INÍCIO DA CORREÇÃO ---
+        // Limpa o ID de pagamento pendente do sessionStorage
+        sessionStorage.removeItem('raspadinha_payment_id');
+        // ==================================================
     }
 
     if (btnGerarPix) {
@@ -159,10 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     etapaPix.style.display = 'block';
                     aguardandoPagamentoEl.style.display = 'block';
                     
-                    // Salva os dados para o jogo e para consulta
                     sessionStorage.setItem('raspadinha_usuario_nome', nome); 
                     sessionStorage.setItem('raspadinha_usuario_telefone', telefone);
-                    currentPaymentId = data.paymentId; // Salva o ID do pagamento atual
+                    
+                    // ==================================================
+                    // --- INÍCIO DA CORREÇÃO ---
+                    // Salva o ID no sessionStorage
+                    sessionStorage.setItem('raspadinha_payment_id', data.paymentId);
+                    // ==================================================
 
                 } else {
                     alert(`Erro: ${data.message || 'Não foi possível gerar o PIX.'}`);
@@ -199,6 +211,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('connect', () => {
             console.log(`Conectado ao servidor Socket.IO com ID: ${socket.id}`);
+            
+            // ==================================================
+            // --- INÍCIO DA CORREÇÃO ---
+            // Assim que conectar (ou reconectar), checa se tem pagamento pendente
+            checarPagamentoPendente();
+            // ==================================================
         });
 
         socket.on('disconnect', () => {
@@ -219,17 +237,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // ==========================================================
-        // --- INÍCIO DA CORREÇÃO ---
-        // ==========================================================
         // OUVINTE PRINCIPAL! O servidor avisa que o pagamento foi aprovado.
         socket.on('pagamentoAprovado', (data) => {
+            // data = { paymentId: "...", valorPremio: 0.00 }
+            
+            // ==================================================
+            // --- INÍCIO DA CORREÇÃO ---
             // Verifica se o pagamento aprovado é o que estamos esperando
-            // O 'data' AGORA CONTÉM { paymentId: "...", valorPremio: 0.00 }
-            if (data.paymentId === currentPaymentId) {
+            const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
+            // ==================================================
+
+            if (data.paymentId === paymentIdPendente) {
                 console.log("Meu pagamento foi aprovado!", data);
                 
-                // 1. Fecha o modal de pagamento
+                // Limpa o ID pendente
+                sessionStorage.removeItem('raspadinha_payment_id');
+                
+                // 1. Fecha o modal de pagamento (se estiver aberto)
                 fecharModal();
                 
                 // 2. Esconde o card de compra
@@ -239,26 +263,83 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 3. Mostra o card do jogo
                 if (cardJogo) cardJogo.style.display = 'block';
 
-                // 4. Inicia a "raspagem" PASSANDO O PRÊMIO que o servidor já nos enviou
-                // Isso evita a "condição de corrida"
+                // 4. Inicia a "raspagem" PASSANDO O PRÊMIO
                 iniciarRaspadinha(data.valorPremio); 
             }
         });
-        // ==========================================================
-        // --- FIM DA CORREÇÃO ---
-        // ==========================================================
 
     } // Fecha o "if (socket)"
+
+    // ==================================================
+    // --- INÍCIO DA CORREÇÃO (NOVA FUNÇÃO) ---
+    // ==================================================
+    // Função que roda na reconexão para checar se já pagamos
+    async function checarPagamentoPendente() {
+        const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
+        if (!paymentIdPendente) {
+            // Não tem pagamento pendente, vida normal
+            return;
+        }
+
+        console.log(`Reconectado. Checando status do Payment ID: ${paymentIdPendente}`);
+        
+        try {
+            const response = await fetch('/api/raspadinha/checar-pagamento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ paymentId: paymentIdPendente }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // SUCESSO! O webhook já rodou enquanto estávamos fora.
+                console.log("Pagamento já foi processado! Prêmio:", data.valorPremio);
+                
+                // Limpa o ID pendente
+                sessionStorage.removeItem('raspadinha_payment_id');
+                
+                // Pula para a tela de jogo
+                if (cardComprar) cardComprar.style.display = 'none';
+                if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
+                if (cardJogo) cardJogo.style.display = 'block';
+                
+                iniciarRaspadinha(data.valorPremio);
+            } else {
+                // Pagamento ainda não foi aprovado.
+                console.log("Pagamento ainda pendente no servidor. Aguardando...");
+                // Mostra o modal de "Aguardando Pagamento..." (caso o usuário tenha fechado)
+                mostrarModalAguardando();
+            }
+        } catch (err) {
+            console.error("Erro ao checar pagamento:", err);
+        }
+    }
+
+    // Função para reabrir o modal no estado "Aguardando Pagamento"
+    function mostrarModalAguardando() {
+        if (modal && etapaDados && etapaPix && aguardandoPagamentoEl) {
+            etapaDados.style.display = 'none';
+            etapaPix.style.display = 'block';
+            aguardandoPagamentoEl.style.display = 'block';
+            
+            // Esconde QR/Copia e Cola, pois já estamos só aguardando
+            document.getElementById('pix-qrcode-container').style.display = 'none';
+            document.getElementById('pix-copia-cola').closest('.form-grupo').style.display = 'none';
+            
+            modal.style.display = 'flex';
+        }
+    }
+    // =G=================================================
+    // --- FIM DA CORREÇÃO ---
+    // ==================================================
+
 
     // ==========================================================
     // 4. LÓGICA DO JOGO (RASPADINHA)
     // ==========================================================
-
-    // ==========================================================
-    // --- INÍCIO DA CORREÇÃO ---
-    // ==========================================================
-    // A função agora recebe o 'valorPremio' direto, e não precisa mais do 'paymentId'
-    // Ela também não é mais 'async' e não faz 'fetch'
+    
+    // (Esta função não muda, ela já estava correta)
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
@@ -309,9 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
             raspadinhaStatus.style.color = "red";
         }
     }
-    // ==========================================================
-    // --- FIM DA CORREÇÃO ---
-    // ==========================================================
 
 
     // ==========================================================
