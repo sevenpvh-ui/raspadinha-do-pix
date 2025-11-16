@@ -183,7 +183,7 @@ async function sortearPremio() {
 
         let totalChance = 0;
         faixas.forEach(f => {
-            totalChance += f.chance;
+            totalChance += parseFloat(f.chance);
         });
 
         // Adiciona a chance de "Não Ganhar" (R$ 0.00)
@@ -196,10 +196,10 @@ async function sortearPremio() {
         let acumulado = 0;
 
         for (const faixa of faixas) {
-            acumulado += faixa.chance;
+            acumulado += parseFloat(faixa.chance);
             if (numeroAleatorio < acumulado) {
                 console.log(`Sorteio: ${faixa.valor.toFixed(2)} (Rand: ${numeroAleatorio.toFixed(2)} < Acum: ${acumulado.toFixed(2)})`);
-                return faixa.valor; // Retorna o valor do prêmio
+                return parseFloat(faixa.valor); // Retorna o valor do prêmio
             }
         }
         
@@ -492,16 +492,30 @@ app.post('/api/raspadinha/checar-premios', async (req, res) => {
 app.use('/admin', express.static(path.join(__dirname, 'public', 'admin')));
 
 // --- Middlewares de Admin ---
+// ==========================================================
+// --- INÍCIO DA CORREÇÃO (checkAdmin) ---
+// ==========================================================
 function checkAdmin(req, res, next) {
     if (req.session && req.session.isAdminRaspadinha) {
+        // Se está logado, continua
         return next();
     }
-    // Se não for admin, redireciona para o login
-    if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
-        return res.status(403).json({ success: false, message: 'Acesso negado.' });
+    
+    // Se não está logado, checa se é um pedido de API (fetch)
+    const isApiRequest = req.headers['accept'] && req.headers['accept'].includes('application/json');
+    
+    if (isApiRequest) {
+        // Se foi uma API, retorna um erro JSON 403 (Proibido)
+        return res.status(403).json({ success: false, message: 'Acesso negado. Sua sessão expirou.' });
+    } else {
+        // Se foi uma navegação normal (ex: F5 na página), redireciona para o login HTML
+        return res.redirect('/admin/login.html');
     }
-    return res.redirect('/admin/login.html');
 }
+// ==========================================================
+// --- FIM DA CORREÇÃO (checkAdmin) ---
+// ==========================================================
+
 
 // --- Login Admin ---
 app.get('/admin/login.html', (req, res) => {
@@ -643,9 +657,10 @@ app.get('/admin/api/vendas', checkAdmin, async (req, res) => {
         res.json({ 
             success: true, 
             vendas: result.rows,
-            totais: totaisRes.rows[0]
+            totais: totaisRes.rows[0] || { faturamento: 0, premios_pagos: 0, premios_pendentes: 0 }
         });
     } catch (e) {
+        console.error("Erro ao buscar vendas admin:", e);
         res.status(500).json({ success: false, message: "Erro ao buscar vendas." });
     }
 });
