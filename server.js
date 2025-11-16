@@ -201,14 +201,17 @@ async function sortearPremio() {
 // ==========================================================
 // WEBHOOK DO MERCADO PAGO (CORRIGIDO)
 // ==========================================================
-app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), async (req, res) => { // <-- TORNADO ASYNC
+// ==================================================
+// --- INÍCIO DA CORREÇÃO (BUG ERR_HTTP_HEADERS_SENT) ---
+// ==================================================
+app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), async (req, res) => {
     console.log("Webhook (Raspadinha) recebido!");
     let reqBody;
     try {
         reqBody = JSON.parse(req.body.toString());
     } catch (e) {
         console.error("Webhook ERRO: Falha ao parsear JSON.");
-        return res.sendStatus(400); // Responde e sai
+        return res.sendStatus(400);
     }
 
     // --- Validação de Assinatura ---
@@ -216,13 +219,13 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
     const requestId = req.headers['x-request-id'];
     if (!signature || !requestId) {
         console.warn("Webhook REJEITADO: Headers ausentes.");
-        return res.sendStatus(400); // Responde e sai
+        return res.sendStatus(400);
     }
     if (MERCADOPAGO_WEBHOOK_SECRET) {
         try {
             if (!reqBody.data || !reqBody.data.id) {
                 console.log("Webhook (Raspadinha) sem 'data.id'. Respondendo 200 OK.");
-                return res.sendStatus(200); // Responde e sai
+                return res.sendStatus(200);
             }
             const dataId = String(reqBody.data.id);
             const parts = signature.split(',').reduce((acc, part) => {
@@ -239,12 +242,12 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
 
             if (calculatedHash !== hash) {
                 console.error("Webhook REJEITADO (Raspadinha): Assinatura inválida.");
-                return res.sendStatus(403); // Responde e sai
+                return res.sendStatus(403);
             }
             console.log("Assinatura do Webhook (Raspadinha) validada.");
         } catch (err) {
             console.error("Webhook ERRO (Raspadinha): Falha ao validar assinatura:", err.message);
-            return res.sendStatus(400); // Responde e sai
+            return res.sendStatus(400);
         }
     } else {
         console.warn("AVISO: Processando Webhook (Raspadinha) SEM VALIDAÇÃO");
@@ -257,7 +260,7 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
 
         try {
             const payment = new Payment(mpClient);
-            const pagamento = await payment.get({ id: paymentId }); // ESPERA pelo pagamento
+            const pagamento = await payment.get({ id: paymentId });
             const status = pagamento.status;
             console.log(`Webhook (Raspadinha): Status ${paymentId} é: ${status}`);
 
@@ -270,7 +273,6 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
                     return res.status(404).send('Pagamento pendente não encontrado, tente novamente.');
                 }
 
-                // Fluxo normal
                 const pendingPayment = pendingPaymentResult.rows[0];
                 const dadosCompra = JSON.parse(pendingPayment.dados_compra_json);
                 const socketId = pendingPayment.socket_id;
@@ -297,26 +299,29 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
                     valorPremio: valorPremio
                 });
 
-                // Envia 200 OK SÓ DEPOIS de processar
                 return res.status(200).send('Pagamento aprovado e processado.');
 
             } else if (status === 'cancelled' || status === 'rejected') {
                 await db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1", [paymentId]);
                 console.log(`Pagamento ${paymentId} (Raspadinha) ${status} removido.`);
-                // Envia 200 OK
                 return res.status(200).send('Pagamento cancelado/rejeitado processado.');
             }
 
+            // Se o status for 'pending' ou outro, apenas confirma o recebimento
+            return res.status(200).send('Webhook recebido, status não aprovado.');
+
         } catch (error) {
-            console.error("Webhook ERRO (Raspadinha): Falha ao buscar pagamento no MP:", error);
-            // Avisa o MP que deu erro para ele tentar de novo
+            console.error("Webhook ERRO (Raspadinha): Falha ao processar pagamento:", error);
             return res.status(500).send('Erro interno ao processar pagamento.');
         }
     }
 
-    // Responde 200 OK se não for do tipo 'payment'
     res.status(200).send('Webhook recebido, mas não é um pagamento.');
 });
+// ==================================================
+// --- FIM DA CORREÇÃO ---
+// ==================================================
+
 
 // ==========================================================
 // MIDDLEWARES GERAIS
@@ -706,17 +711,9 @@ app.post('/admin/api/premio/pagar', checkAdmin, async (req, res) => {
 io.on('connection', (socket) => {
     console.log(`Novo usuário conectado (Raspadinha): ${socket.id}`);
     
-    // ==================================================
-    // --- INÍCIO DA CORREÇÃO ---
-    // REMOVIDA A LIMPEZA DE PAGAMENTOS PENDENTES NO 'disconnect'
-    // ELES AGORA EXPIRAM NATURALMENTE (OU SÃO PAGOS)
-    // ==================================================
     socket.on('disconnect', () => {
         console.log(`Usuário desconectado (Raspadinha): ${socket.id}`);
     });
-    // ==================================================
-    // --- FIM DA CORREÇÃO ---
-    // ==================================================
 });
 
 
