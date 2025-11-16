@@ -5,7 +5,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     
     // Conecta ao servidor da Raspadinha (que está em outra porta ou URL)
-    const socket = io(); 
+    // --- INÍCIO DA CORREÇÃO ---
+    let socket;
+    try {
+        socket = io();
+        console.log("Conectado ao servidor Socket.IO (Raspadinha).");
+    } catch (err) {
+        console.error("Erro ao conectar ao Socket.IO (Raspadinha):", err);
+        alert("Erro de conexão com o servidor. Recarregue a página.");
+        // Trava os botões de compra se o socket falhar
+        const btnComprar = document.getElementById('btn-comprar-raspadinha');
+        if (btnComprar) {
+            btnComprar.disabled = true;
+            btnComprar.textContent = "Erro de Conexão";
+        }
+    }
+    // --- FIM DA CORREÇÃO ---
+
 
     // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 2.00; // Padrão
@@ -83,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (btnComprarRaspadinha) {
         btnComprarRaspadinha.addEventListener('click', () => {
+            if (!socket || !socket.connected) {
+                alert("Erro de conexão com o servidor. Por favor, recarregue a página.");
+                return;
+            }
             modal.style.display = 'flex';
             modalNome.focus();
         });
@@ -113,6 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!/^\d{10,11}$/.test(telefone.replace(/\D/g,''))) {
                 alert("Telefone inválido. Insira DDD + Número (só números)."); return;
             }
+
+            // --- INÍCIO DA CORREÇÃO ---
+            if (!socket || !socket.id) {
+                alert("Erro de conexão. Por favor, recarregue a página e tente novamente.");
+                return;
+            }
+            // --- FIM DA CORREÇÃO ---
 
             btnGerarPix.textContent = "Gerando..."; 
             btnGerarPix.disabled = true;
@@ -174,48 +201,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. OUVINTES DO SOCKET.IO (APROVAÇÃO)
     // ==========================================================
 
-    socket.on('connect', () => {
-        console.log(`Conectado ao servidor Socket.IO com ID: ${socket.id}`);
-    });
+    // --- INÍCIO DA CORREÇÃO ---
+    if (socket) {
+    // --- FIM DA CORREÇÃO ---
 
-    socket.on('disconnect', () => {
-        console.warn("Desconectado do servidor Socket.IO.");
-    });
-    
-    // Ouve a atualização de preço vinda do Admin
-    socket.on('configAtualizada', (data) => {
-        console.log("Configuração recebida via socket:", data);
-        if (data.preco) {
-            PRECO_RASPADINHA_ATUAL = parseFloat(data.preco);
-            if (raspadinhaPrecoEl) raspadinhaPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
-            if (modalPrecoEl) modalPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
-        }
-        if (data.premioMaximo) {
-            PREMIO_MAXIMO_ATUAL = parseFloat(data.premioMaximo);
-            if (raspadinhaPremioMaximoEl) raspadinhaPremioMaximoEl.textContent = formatarBRL(PREMIO_MAXIMO_ATUAL);
-        }
-    });
+        socket.on('connect', () => {
+            console.log(`Conectado ao servidor Socket.IO com ID: ${socket.id}`);
+        });
 
-    // OUVINTE PRINCIPAL! O servidor avisa que o pagamento foi aprovado.
-    socket.on('pagamentoAprovado', (data) => {
-        // Verifica se o pagamento aprovado é o que estamos esperando
-        if (data.paymentId === currentPaymentId) {
-            console.log("Meu pagamento foi aprovado!", data);
-            
-            // 1. Fecha o modal de pagamento
-            fecharModal();
-            
-            // 2. Esconde o card de compra
-            if (cardComprar) cardComprar.style.display = 'none';
-            if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
-            
-            // 3. Mostra o card do jogo
-            if (cardJogo) cardJogo.style.display = 'block';
+        socket.on('disconnect', () => {
+            console.warn("Desconectado do servidor Socket.IO.");
+        });
+        
+        // Ouve a atualização de preço vinda do Admin
+        socket.on('configAtualizada', (data) => {
+            console.log("Configuração recebida via socket:", data);
+            if (data.preco) {
+                PRECO_RASPADINHA_ATUAL = parseFloat(data.preco);
+                if (raspadinhaPrecoEl) raspadinhaPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
+                if (modalPrecoEl) modalPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
+            }
+            if (data.premioMaximo) {
+                PREMIO_MAXIMO_ATUAL = parseFloat(data.premioMaximo);
+                if (raspadinhaPremioMaximoEl) raspadinhaPremioMaximoEl.textContent = formatarBRL(PREMIO_MAXIMO_ATUAL);
+            }
+        });
 
-            // 4. Inicia a "raspagem"
-            iniciarRaspadinha(currentPaymentId);
-        }
-    });
+        // OUVINTE PRINCIPAL! O servidor avisa que o pagamento foi aprovado.
+        socket.on('pagamentoAprovado', (data) => {
+            // Verifica se o pagamento aprovado é o que estamos esperando
+            if (data.paymentId === currentPaymentId) {
+                console.log("Meu pagamento foi aprovado!", data);
+                
+                // 1. Fecha o modal de pagamento
+                fecharModal();
+                
+                // 2. Esconde o card de compra
+                if (cardComprar) cardComprar.style.display = 'none';
+                if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
+                
+                // 3. Mostra o card do jogo
+                if (cardJogo) cardJogo.style.display = 'block';
+
+                // 4. Inicia a "raspagem"
+                iniciarRaspadinha(currentPaymentId);
+            }
+        });
+
+    // --- INÍCIO DA CORREÇÃO ---
+    } // Fecha o "if (socket)"
+    // --- FIM DA CORREÇÃO ---
 
     // ==========================================================
     // 4. LÓGICA DO JOGO (RASPADINHA)
