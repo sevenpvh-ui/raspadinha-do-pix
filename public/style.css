@@ -398,25 +398,38 @@ footer {
 
 /* --- ESTILOS DA ÁREA DE JOGO (RASPADINHA) --- */
 
+/* ================================================== */
+/* --- INÍCIO DA CORREÇÃO --- */
+/* ================================================== */
 .raspadinha-container {
     width: 100%;
     max-width: 450px; /* Largura máxima da raspadinha */
     margin: 10px auto 0 auto;
-    position: relative;
+    position: relative; /* O PAI PRECISA SER RELATIVE */
     border-radius: 12px;
     overflow: hidden; /* Garante que o fundo não vaze */
     box-shadow: var(--shadow-medium);
+    /* Força a proporção 16:9 */
+    aspect-ratio: 16 / 9; 
 }
 
 /* A "tinta" da raspadinha que será raspada */
 .raspadinha-frente {
+    position: absolute; /* <<-- ESTA É A CORREÇÃO PRINCIPAL */
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 0;
-    padding-bottom: 56.25%; /* Proporção 16:9 (altura = 56.25% da largura) */
-    position: relative;
+    height: 100%;
+    /* REMOVIDO: padding-bottom: 56.25%; */
+    /* REMOVIDO: position: relative; */
     background-color: #ddd;
     cursor: grab;
+    z-index: 2; /* Fica na frente */
 }
+/* ================================================== */
+/* --- FIM DA CORREÇÃO --- */
+/* ================================================== */
+
 .raspadinha-frente:active {
     cursor: grabbing;
 }
@@ -456,7 +469,7 @@ footer {
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #fefae0, #faedcd);
-    z-index: -1; /* Fica atrás da "tinta" */
+    z-index: 1; /* Fica atrás da "tinta" */
 }
 
 .raspadinha-fundo h3 {
