@@ -251,9 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } // Fecha o "if (socket)"
 
-    // ==================================================
-    // --- INÍCIO DA CORREÇÃO (NOVA FUNÇÃO) ---
-    // ==================================================
     // Função que roda na reconexão para checar se já pagamos
     async function checarPagamentoPendente() {
         const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
@@ -265,10 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Reconectado. Checando status do Payment ID: ${paymentIdPendente}`);
         
         try {
-            // ==================================================
-            // --- INÍCIO DA CORREÇÃO (NOVA ROTA) ---
-            // Usando a nova rota /api/raspadinha/checar-pagamento
-            // ==================================================
             const response = await fetch('/api/raspadinha/checar-pagamento', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -317,9 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.style.display = 'flex';
         }
     }
-    // ==================================================
-    // --- FIM DA CORREÇÃO ---
-    // ==================================================
 
 
     // ==========================================================
@@ -340,8 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. Inicializa a biblioteca ScratchCard
+            // ==================================================
+            // --- INÍCIO DA CORREÇÃO ---
+            // ==================================================
             const sc = new ScratchCard('#raspadinha-container', {
-                scratchType: SCRATCH_TYPE.LINE,
+                scratchType: 'line', // <-- CORRIGIDO: De SCRATCH_TYPE.LINE para 'line'
+            // ==================================================
+            // --- FIM DA CORREÇÃO ---
+            // ==================================================
                 containerWidth: raspadinhaContainer.clientWidth,
                 containerHeight: raspadinhaContainer.clientWidth * 0.5625, // Força 16:9
                 imageForwardSrc: 'imagem-raspadinha.png', // Imagem de "tinta"
