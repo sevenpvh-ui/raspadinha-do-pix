@@ -21,12 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 2.00; // Padrão
     let PREMIO_MAXIMO_ATUAL = 100.00; // Padrão
-    
-    // ==================================================
-    // --- INÍCIO DA CORREÇÃO ---
-    // let currentPaymentId = null; // Removido
-    // AGORA USAMOS SESSIONSTORAGE para sobreviver a reloads
-    // ==================================================
 
     // --- Seletores do DOM (Página Principal) ---
     const cardComprar = document.getElementById('card-comprar-raspadinha');
@@ -119,11 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnGerarPix.disabled = false; 
             btnGerarPix.textContent = "Gerar PIX"; 
         }
-        // ==================================================
-        // --- INÍCIO DA CORREÇÃO ---
         // Limpa o ID de pagamento pendente do sessionStorage
         sessionStorage.removeItem('raspadinha_payment_id');
-        // ==================================================
     }
 
     if (btnGerarPix) {
@@ -170,11 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.setItem('raspadinha_usuario_nome', nome); 
                     sessionStorage.setItem('raspadinha_usuario_telefone', telefone);
                     
-                    // ==================================================
-                    // --- INÍCIO DA CORREÇÃO ---
                     // Salva o ID no sessionStorage
                     sessionStorage.setItem('raspadinha_payment_id', data.paymentId);
-                    // ==================================================
 
                 } else {
                     alert(`Erro: ${data.message || 'Não foi possível gerar o PIX.'}`);
@@ -212,11 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.on('connect', () => {
             console.log(`Conectado ao servidor Socket.IO com ID: ${socket.id}`);
             
-            // ==================================================
-            // --- INÍCIO DA CORREÇÃO ---
             // Assim que conectar (ou reconectar), checa se tem pagamento pendente
             checarPagamentoPendente();
-            // ==================================================
         });
 
         socket.on('disconnect', () => {
@@ -241,11 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.on('pagamentoAprovado', (data) => {
             // data = { paymentId: "...", valorPremio: 0.00 }
             
-            // ==================================================
-            // --- INÍCIO DA CORREÇÃO ---
-            // Verifica se o pagamento aprovado é o que estamos esperando
             const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
-            // ==================================================
 
             if (data.paymentId === paymentIdPendente) {
                 console.log("Meu pagamento foi aprovado!", data);
@@ -284,6 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Reconectado. Checando status do Payment ID: ${paymentIdPendente}`);
         
         try {
+            // ==================================================
+            // --- INÍCIO DA CORREÇÃO (NOVA ROTA) ---
+            // Usando a nova rota /api/raspadinha/checar-pagamento
+            // ==================================================
             const response = await fetch('/api/raspadinha/checar-pagamento', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -312,7 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 mostrarModalAguardando();
             }
         } catch (err) {
-            console.error("Erro ao checar pagamento:", err);
+            // Isso acontece se a resposta for 404 (ainda pendente)
+            console.log("Pagamento ainda pendente no servidor (catch). Aguardando...");
+            mostrarModalAguardando();
         }
     }
 
@@ -330,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.style.display = 'flex';
         }
     }
-    // =G=================================================
+    // ==================================================
     // --- FIM DA CORREÇÃO ---
     // ==================================================
 
@@ -339,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. LÓGICA DO JOGO (RASPADINHA)
     // ==========================================================
     
-    // (Esta função não muda, ela já estava correta)
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
