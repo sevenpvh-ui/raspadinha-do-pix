@@ -251,9 +251,6 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
     }
     // --- Fim da Validação ---
 
-    // ==================================================
-    // --- INÍCIO DA CORREÇÃO (LÓGICA ASYNC) ---
-    // ==================================================
     if (reqBody.type === 'payment') {
         const paymentId = reqBody.data.id;
         console.log(`Webhook (Raspadinha): ID de Pagamento ${paymentId}`);
@@ -270,7 +267,6 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
 
                 if (pendingPaymentResult.rows.length === 0) {
                     console.warn(`Webhook (Raspadinha): Pagamento ${paymentId} aprovado, mas não encontrado no DB pendente. (Race Condition)`);
-                    // RETORNA 404 para o MercadoPago tentar de novo
                     return res.status(404).send('Pagamento pendente não encontrado, tente novamente.');
                 }
 
@@ -317,9 +313,6 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), asyn
             return res.status(500).send('Erro interno ao processar pagamento.');
         }
     }
-    // ==================================================
-    // --- FIM DA CORREÇÃO ---
-    // ==================================================
 
     // Responde 200 OK se não for do tipo 'payment'
     res.status(200).send('Webhook recebido, mas não é um pagamento.');
@@ -456,6 +449,40 @@ app.post('/api/raspadinha/meu-premio', async (req, res) => {
         res.status(500).json({ success: false, message: "Erro de servidor." });
     }
 });
+
+// ==================================================
+// --- INÍCIO DA CORREÇÃO (NOVA ROTA) ---
+// ==================================================
+// API para o cliente checar um pagamento que ele acha que já fez (ao reconectar)
+app.post('/api/raspadinha/checar-pagamento', async (req, res) => {
+    const { paymentId } = req.body;
+    if (!paymentId) {
+        return res.status(400).json({ success: false, message: "ID de pagamento não fornecido." });
+    }
+
+    try {
+        // Busca o prêmio na tabela de VENDAS (não na de pendentes)
+        const query = "SELECT valor_premio FROM raspadinha_vendas WHERE payment_id = $1";
+        const result = await db.query(query, [paymentId]);
+
+        if (result.rows.length > 0) {
+            // Pagamento ENCONTRADO! O webhook já rodou.
+            const valorPremio = result.rows[0].valor_premio;
+            console.log(`Checagem de pagamento (Raspadinha): ${paymentId} ENCONTRADO. Prêmio: R$${valorPremio}`);
+            res.json({ success: true, valorPremio: valorPremio });
+        } else {
+            // Pagamento ainda não foi processado pelo webhook.
+            console.log(`Checagem de pagamento (Raspadinha): ${paymentId} NÃO encontrado. (Ainda pendente)`);
+            res.status(404).json({ success: false, message: "Pagamento ainda pendente." });
+        }
+    } catch (e) {
+        console.error("Erro ao /checar-pagamento:", e);
+        res.status(500).json({ success: false, message: "Erro de servidor." });
+    }
+});
+// ==================================================
+// --- FIM DA CORREÇÃO ---
+// ==================================================
 
 // API para o cliente checar prêmios antigos
 app.post('/api/raspadinha/checar-premios', async (req, res) => {
@@ -679,13 +706,17 @@ app.post('/admin/api/premio/pagar', checkAdmin, async (req, res) => {
 io.on('connection', (socket) => {
     console.log(`Novo usuário conectado (Raspadinha): ${socket.id}`);
     
+    // ==================================================
+    // --- INÍCIO DA CORREÇÃO ---
+    // REMOVIDA A LIMPEZA DE PAGAMENTOS PENDENTES NO 'disconnect'
+    // ELES AGORA EXPIRAM NATURALMENTE (OU SÃO PAGOS)
+    // ==================================================
     socket.on('disconnect', () => {
         console.log(`Usuário desconectado (Raspadinha): ${socket.id}`);
-        // Limpa pagamentos pendentes associados a este socket
-        db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE socket_id = $1", [socket.id])
-            .then(() => console.log(`Pagamentos pendentes de ${socket.id} limpos.`))
-            .catch(e => console.error("Erro ao limpar pendentes no disconnect:", e));
     });
+    // ==================================================
+    // --- FIM DA CORREÇÃO ---
+    // ==================================================
 });
 
 
