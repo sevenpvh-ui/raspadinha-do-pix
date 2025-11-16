@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ==================================================
                 // --- INÍCIO DA CORREÇÃO (BUG do Modal) ---
                 // ==================================================
-                fecharModal(); // <-- ADICIONAMOS ESTA LINHA
+                fecharModal(); // <-- ESTA É A LINHA QUE FALTAVA
                 // ==================================================
                 // --- FIM DA CORREÇÃO ---
                 // ==================================================
