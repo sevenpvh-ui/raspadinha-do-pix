@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Raspadinha do Pix</title>
+    <link rel="stylesheet" href="../style.css"> 
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+
+    <div class="login-container card">
+        <h1 class="title-gradient">Admin Raspadinha</h1>
+        <p>Acesso Restrito</p>
+
+        <form id="login-form">
+            <div class="form-grupo">
+                <label for="usuario">Usuário:</label>
+                <input type="text" id="usuario" name="usuario" required>
+            </div>
+            <div class="form-grupo">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" required>
+            </div>
+            <button type="submit" class="btn-comprar btn-destaque">Entrar</button>
+        </form>
+        <p id="login-error" class="error-message" style="display: none;">Usuário ou senha inválidos.</p>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

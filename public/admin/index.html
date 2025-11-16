@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Raspadinha do Pix</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-panel-body">
+
+    <aside class="admin-sidebar">
+        <div class="logo">RASPADINHA</div>
+        <nav class="admin-nav">
+            <ul>
+                <li><a href="/admin/index.html" class="ativo">Painel de Controle</a></li>
+            </ul>
+        </nav>
+        <div class="logout-link">
+             <a href="/admin/logout">Sair</a>
+        </div>
+    </aside>
+
+    <main class="admin-content">
+         <header class="content-header">
+             <h1>Painel da Raspadinha</h1>
+        </header>
+
+        <section class="card admin-section">
+            <h2>Resumo Financeiro</h2>
+            <div class="relatorio-resumo" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="resumo-card">
+                    <h3>Faturamento Total</h3>
+                    <span class="valor arrecadado" id="total-faturamento">R$ 0,00</span>
+                </div>
+                <div class="resumo-card">
+                    <h3>Total Prêmios Pagos</h3>
+                    <span class="valor cartelas" id="total-premios-pagos">R$ 0,00</span>
+                </div>
+                <div class="resumo-card" style="background-color: #fff8e1;">
+                    <h3 style="color: #856404;">Prêmios Pendentes</h3>
+                    <span class="valor" id="total-premios-pendentes" style="color: #e67e22;">R$ 0,00</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card admin-section">
+            <h2>Configurações Gerais</h2>
+            <form id="form-config">
+                <div class="form-grupo-inline">
+                    <label for="preco-raspadinha">Preço da Raspadinha (R$):</label>
+                    <input type="number" id="preco-raspadinha" step="0.01" min="0.01" placeholder="Ex: 2.00" required>
+                </div>
+                <div class="form-grupo-inline">
+                    <label for="premio-maximo-display">Prêmio Máx. (p/ propaganda):</label>
+                    <input type="number" id="premio-maximo-display" step="0.01" min="0" placeholder="Ex: 100.00" required>
+                </div>
+                <div class="form-grupo-inline">
+                    <label></label> 
+                    <button type="submit" id="btn-salvar-config" class="btn-comprar btn-comprar-azul">Salvar Configurações</button>
+                </div>
+            </form>
+            <p id="config-status" class="status-message" style="display: none;"></p>
+        </section>
+
+        <section class="card admin-section">
+            <h2>Gerenciar Faixas de Prêmio</h2>
+            <p>Controle a probabilidade de cada prêmio sair. A chance de "Não Ganhar (R$ 0,00)" é calculada automaticamente (100% - total de chances).</p>
+            <form id="form-criar-faixa">
+                <div class="form-grupo-inline">
+                    <label for="faixa-valor">Valor do Prêmio (R$):</label>
+                    <input type="number" id="faixa-valor" step="0.01" min="0.01" placeholder="Ex: 100.00" required>
+                </div>
+                <div class="form-grupo-inline">
+                    <label for="faixa-chance">Chance de Sair (%):</label>
+                    <input type="number" id="faixa-chance" step="0.1" min="0.1" max="100" placeholder="Ex: 5" required>
+                </div>
+                <div class="form-grupo-inline">
+                    <label for="faixa-descricao">Descrição (Opcional):</label>
+                    <input type="text" id="faixa-descricao" placeholder="Ex: Prêmio Máximo">
+                </div>
+                <div class="form-grupo-inline">
+                    <label></label> 
+                    <button type="submit" class="btn-comprar btn-destaque">Adicionar Faixa</button>
+                </div>
+            </form>
+            <p id="faixa-status" class="status-message" style="display: none;"></p>
+
+            <hr style="margin: 25px 0;">
+            <h3>Faixas Atuais (<span id="total-chance">0</span>% de chance de prêmio)</h3>
+            <div class="tabela-relatorio-container">
+                <table class="relatorio-vendas">
+                    <thead>
+                        <tr>
+                            <th class="col-valor">Valor (R$)</th>
+                            <th class="col-qtd">Chance (%)</th>
+                            <th class="col-nome">Descrição</th>
+                            <th class="col-acao">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-faixas-corpo">
+                        <tr><td colspan="4" style="text-align: center;">Carregando faixas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card admin-section">
+            <h2>Histórico de Vendas e Pagamentos</h2>
+            <p>Use esta tabela para ver as vendas e marcar os prêmios como "Pago".</p>
+            <div class="tabela-relatorio-container">
+                <table class="relatorio-vendas relatorio-vencedores">
+                    <thead>
+                        <tr>
+                            <th class="col-data">Data/Hora</th>
+                            <th class="col-nome">Jogador</th>
+                            <th class="col-telefone">Telefone (PIX)</th>
+                            <th class="col-valor">Valor Pago</th>
+                            <th class="col-valor">Valor Prêmio</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-acao">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-vendas-corpo">
+                        <tr><td colspan="7" style="text-align: center;">Carregando vendas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+    <script src="admin.js"></script>
+</body>
+</html>
