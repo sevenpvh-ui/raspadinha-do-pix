@@ -244,8 +244,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 3. Mostra o card do jogo
                 if (cardJogo) cardJogo.style.display = 'block';
 
-                // 4. Inicia a "raspagem" PASSANDO O PRÊMIO
-                iniciarRaspadinha(data.valorPremio); 
+                // ==================================================
+                // --- INÍCIO DA CORREÇÃO (BUG de Renderização) ---
+                // ==================================================
+                // Adiciona um pequeno delay. Isso dá ao navegador 100ms
+                // para renderizar o 'cardJogo' (mudar de display:none para display:block)
+                // ANTES de tentarmos ler a largura (clientWidth) dele.
+                setTimeout(() => {
+                    iniciarRaspadinha(data.valorPremio); 
+                }, 100); // 100ms de delay
+                // ==================================================
+                // --- FIM DA CORREÇÃO ---
+                // ==================================================
             }
         });
 
@@ -282,7 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
                 if (cardJogo) cardJogo.style.display = 'block';
                 
-                iniciarRaspadinha(data.valorPremio);
+                // ==================================================
+                // --- INÍCIO DA CORREÇÃO (BUG de Renderização) ---
+                // ==================================================
+                setTimeout(() => {
+                    iniciarRaspadinha(data.valorPremio);
+                }, 100); // 100ms de delay
+                // ==================================================
+                // --- FIM DA CORREÇÃO ---
+                // ==================================================
             } else {
                 // Pagamento ainda não foi aprovado.
                 console.log("Pagamento ainda pendente no servidor. Aguardando...");
@@ -331,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Inicializa a biblioteca ScratchCard
             // ==================================================
-            // --- INÍCIO DA CORREÇÃO ---
+            // --- INÍCIO DA CORREÇÃO (BUG da Biblioteca) ---
             // ==================================================
             const sc = new ScratchCard('#raspadinha-container', {
                 scratchType: 'line', // <-- CORRIGIDO: De SCRATCH_TYPE.LINE para 'line'
