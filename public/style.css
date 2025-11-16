@@ -398,9 +398,6 @@ footer {
 
 /* --- ESTILOS DA ÁREA DE JOGO (RASPADINHA) --- */
 
-/* ================================================== */
-/* --- INÍCIO DA CORREÇÃO --- */
-/* ================================================== */
 .raspadinha-container {
     width: 100%;
     max-width: 450px; /* Largura máxima da raspadinha */
@@ -415,20 +412,22 @@ footer {
 
 /* A "tinta" da raspadinha que será raspada */
 .raspadinha-frente {
-    position: absolute; /* <<-- ESTA É A CORREÇÃO PRINCIPAL */
+    position: absolute; 
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* REMOVIDO: padding-bottom: 56.25%; */
-    /* REMOVIDO: position: relative; */
     background-color: #ddd;
     cursor: grab;
     z-index: 2; /* Fica na frente */
+    /* ================================================== */
+    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
+    /* ================================================== */
+    touch-action: none; /* Diz ao celular para NÃO rolar a página */
+    /* ================================================== */
+    /* --- FIM DA CORREÇÃO --- */
+    /* ================================================== */
 }
-/* ================================================== */
-/* --- FIM DA CORREÇÃO --- */
-/* ================================================== */
 
 .raspadinha-frente:active {
     cursor: grabbing;
