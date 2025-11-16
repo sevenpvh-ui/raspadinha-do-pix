@@ -129,7 +129,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORTA = process.env.PORT || 4000; // Use uma porta diferente do Bingo!
+const PORTA = process.env.PORT || 4000;
 
 // ==========================================================
 // CONFIGURAÇÃO DO MERCADO PAGO
@@ -176,20 +176,17 @@ async function sortearPremio() {
             totalChance += parseFloat(f.chance);
         });
 
-        // Adiciona a chance de "Não Ganhar" (R$ 0.00)
-        // Se a soma das chances for 31%, a chance de não ganhar é 100 - 31 = 69%
         const chanceZero = Math.max(0, 100 - totalChance); 
         faixas.push({ valor: 0.00, chance: chanceZero });
 
-        // Algoritmo de Sorteio Ponderado
-        const numeroAleatorio = Math.random() * 100; // Gera número de 0.00 a 99.99
+        const numeroAleatorio = Math.random() * 100;
         let acumulado = 0;
 
         for (const faixa of faixas) {
             acumulado += parseFloat(faixa.chance);
             if (numeroAleatorio < acumulado) {
                 console.log(`Sorteio: ${faixa.valor.toFixed(2)} (Rand: ${numeroAleatorio.toFixed(2)} < Acum: ${acumulado.toFixed(2)})`);
-                return parseFloat(faixa.valor); // Retorna o valor do prêmio
+                return parseFloat(faixa.valor); 
             }
         }
         
@@ -202,30 +199,30 @@ async function sortearPremio() {
 
 
 // ==========================================================
-// WEBHOOK DO MERCADO PAGO
+// WEBHOOK DO MERCADO PAGO (CORRIGIDO)
 // ==========================================================
-app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), async (req, res) => { // <-- TORNADO ASYNC
     console.log("Webhook (Raspadinha) recebido!");
     let reqBody;
     try {
         reqBody = JSON.parse(req.body.toString());
     } catch (e) {
         console.error("Webhook ERRO: Falha ao parsear JSON.");
-        return res.sendStatus(400);
+        return res.sendStatus(400); // Responde e sai
     }
 
-    // --- Validação de Assinatura (COPIADA DO BINGO) ---
+    // --- Validação de Assinatura ---
     const signature = req.headers['x-signature'];
     const requestId = req.headers['x-request-id'];
     if (!signature || !requestId) {
         console.warn("Webhook REJEITADO: Headers ausentes.");
-        return res.sendStatus(400);
+        return res.sendStatus(400); // Responde e sai
     }
     if (MERCADOPAGO_WEBHOOK_SECRET) {
         try {
             if (!reqBody.data || !reqBody.data.id) {
                 console.log("Webhook (Raspadinha) sem 'data.id'. Respondendo 200 OK.");
-                return res.sendStatus(200);
+                return res.sendStatus(200); // Responde e sai
             }
             const dataId = String(reqBody.data.id);
             const parts = signature.split(',').reduce((acc, part) => {
@@ -242,92 +239,90 @@ app.post('/webhook-mercadopago', express.raw({ type: 'application/json' }), (req
 
             if (calculatedHash !== hash) {
                 console.error("Webhook REJEITADO (Raspadinha): Assinatura inválida.");
-                return res.sendStatus(403);
+                return res.sendStatus(403); // Responde e sai
             }
             console.log("Assinatura do Webhook (Raspadinha) validada.");
         } catch (err) {
             console.error("Webhook ERRO (Raspadinha): Falha ao validar assinatura:", err.message);
-            return res.sendStatus(400);
+            return res.sendStatus(400); // Responde e sai
         }
     } else {
         console.warn("AVISO: Processando Webhook (Raspadinha) SEM VALIDAÇÃO");
     }
     // --- Fim da Validação ---
 
+    // ==================================================
+    // --- INÍCIO DA CORREÇÃO (LÓGICA ASYNC) ---
+    // ==================================================
     if (reqBody.type === 'payment') {
         const paymentId = reqBody.data.id;
         console.log(`Webhook (Raspadinha): ID de Pagamento ${paymentId}`);
 
-        const payment = new Payment(mpClient);
-        payment.get({ id: paymentId })
-            .then(async (pagamento) => {
-                const status = pagamento.status;
-                console.log(`Webhook (Raspadinha): Status ${paymentId} é: ${status}`);
+        try {
+            const payment = new Payment(mpClient);
+            const pagamento = await payment.get({ id: paymentId }); // ESPERA pelo pagamento
+            const status = pagamento.status;
+            console.log(`Webhook (Raspadinha): Status ${paymentId} é: ${status}`);
 
-                if (status === 'approved') {
-                    // 1. Encontra o pagamento pendente
-                    const query = "SELECT * FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1";
-                    const pendingPaymentResult = await db.query(query, [paymentId]);
+            if (status === 'approved') {
+                const query = "SELECT * FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1";
+                const pendingPaymentResult = await db.query(query, [paymentId]);
 
-                    // ==================================================
-                    // --- INÍCIO DA CORREÇÃO (BUG DE CORRIDA) ---
-                    // ==================================================
-                    if (pendingPaymentResult.rows.length === 0) {
-                        // O PAGAMENTO AINDA NÃO FOI SALVO NO DB
-                        console.warn(`Webhook (Raspadinha): Pagamento ${paymentId} aprovado, mas não encontrado no DB pendente. (Race Condition)`);
-                        // Retorna 404 para o MercadoPago tentar de novo
-                        return res.status(404).send('Pagamento pendente não encontrado, tente novamente.');
-                    }
-                    // ==================================================
-                    // --- FIM DA CORREÇÃO ---
-                    // ==================================================
-
-                    // Se encontrou, continua o fluxo normal:
-                    const pendingPayment = pendingPaymentResult.rows[0];
-                    const dadosCompra = JSON.parse(pendingPayment.dados_compra_json);
-                    const socketId = pendingPayment.socket_id;
-                    
-                    // 2. SORTEIA O PRÊMIO
-                    const valorPremio = await sortearPremio();
-                    
-                    // 3. Salva a Venda/Prêmio no banco
-                    const vendaQuery = `
-                        INSERT INTO raspadinha_vendas 
-                        (nome_jogador, telefone, valor_pago, valor_premio, payment_id, status_pagamento_premio)
-                        VALUES ($1, $2, $3, $4, $5, $6)
-                    `;
-                    const statusPremio = valorPremio > 0 ? 'Pendente' : 'Pago';
-                    
-                    await db.query(vendaQuery, [
-                        dadosCompra.nome, 
-                        dadosCompra.telefone, 
-                        dadosCompra.valorTotal, 
-                        valorPremio, 
-                        paymentId, 
-                        statusPremio
-                    ]);
-
-                    // 4. Limpa o pagamento pendente
-                    await db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1", [paymentId]);
-                    console.log(`Pagamento ${paymentId} (Raspadinha) processado. Prêmio: R$${valorPremio}`);
-
-                    // 5. Avisa o cliente (socket) que o pagamento foi aprovado
-                    io.to(socketId).emit('pagamentoAprovado', {
-                        paymentId: paymentId,
-                        valorPremio: valorPremio // Envia o prêmio sorteado para o cliente
-                    });
-
-                } else if (status === 'cancelled' || status === 'rejected') {
-                    await db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1", [paymentId]);
-                    console.log(`Pagamento ${paymentId} (Raspadinha) ${status} removido.`);
+                if (pendingPaymentResult.rows.length === 0) {
+                    console.warn(`Webhook (Raspadinha): Pagamento ${paymentId} aprovado, mas não encontrado no DB pendente. (Race Condition)`);
+                    // RETORNA 404 para o MercadoPago tentar de novo
+                    return res.status(404).send('Pagamento pendente não encontrado, tente novamente.');
                 }
-            })
-            .catch(error => {
-                console.error("Webhook ERRO (Raspadinha): Falha ao buscar pagamento no MP:", error);
-            });
+
+                // Fluxo normal
+                const pendingPayment = pendingPaymentResult.rows[0];
+                const dadosCompra = JSON.parse(pendingPayment.dados_compra_json);
+                const socketId = pendingPayment.socket_id;
+                
+                const valorPremio = await sortearPremio();
+                
+                const vendaQuery = `
+                    INSERT INTO raspadinha_vendas 
+                    (nome_jogador, telefone, valor_pago, valor_premio, payment_id, status_pagamento_premio)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `;
+                const statusPremio = valorPremio > 0 ? 'Pendente' : 'Pago';
+                
+                await db.query(vendaQuery, [
+                    dadosCompra.nome, dadosCompra.telefone, dadosCompra.valorTotal, 
+                    valorPremio, paymentId, statusPremio
+                ]);
+
+                await db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1", [paymentId]);
+                console.log(`Pagamento ${paymentId} (Raspadinha) processado. Prêmio: R$${valorPremio}`);
+
+                io.to(socketId).emit('pagamentoAprovado', {
+                    paymentId: paymentId,
+                    valorPremio: valorPremio
+                });
+
+                // Envia 200 OK SÓ DEPOIS de processar
+                return res.status(200).send('Pagamento aprovado e processado.');
+
+            } else if (status === 'cancelled' || status === 'rejected') {
+                await db.query("DELETE FROM raspadinha_pagamentos_pendentes WHERE payment_id = $1", [paymentId]);
+                console.log(`Pagamento ${paymentId} (Raspadinha) ${status} removido.`);
+                // Envia 200 OK
+                return res.status(200).send('Pagamento cancelado/rejeitado processado.');
+            }
+
+        } catch (error) {
+            console.error("Webhook ERRO (Raspadinha): Falha ao buscar pagamento no MP:", error);
+            // Avisa o MP que deu erro para ele tentar de novo
+            return res.status(500).send('Erro interno ao processar pagamento.');
+        }
     }
-    // Responde 200 OK para o MercadoPago (se não respondemos 404 antes)
-    res.status(200).send('Webhook processado.');
+    // ==================================================
+    // --- FIM DA CORREÇÃO ---
+    // ==================================================
+
+    // Responde 200 OK se não for do tipo 'payment'
+    res.status(200).send('Webhook recebido, mas não é um pagamento.');
 });
 
 // ==========================================================
