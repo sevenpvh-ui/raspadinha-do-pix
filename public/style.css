@@ -408,56 +408,12 @@ footer {
     box-shadow: var(--shadow-medium);
     /* Força a proporção 16:9 */
     aspect-ratio: 16 / 9; 
-    
-    /* A linha touch-action: none; foi REMOVIDA DAQUI */
 }
 
-/* A "tinta" da raspadinha que será raspada (IMAGEM ESTÁTICA) */
-.raspadinha-frente {
-    position: absolute; 
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #ddd;
-    cursor: grab;
-    
-    /* ================================================== */
-    /* --- INÍCIO DA CORREÇÃO --- */
-    /* z-index: 3 para ficar no TOPO */
-    z-index: 3; 
-    /* pointer-events: none; faz o clique/toque "atravessar" */
-    pointer-events: none; 
-    /* ================================================== */
-}
-
-.raspadinha-frente:active {
-    cursor: grabbing;
-}
-/* Imagem de "capa" da raspadinha */
-.raspadinha-frente img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none; /* Impede que a imagem "agarre" o mouse */
-}
-/* Texto "Raspe Aqui" */
-.raspadinha-frente span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 2em;
-    font-weight: 900;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    pointer-events: none;
-    z-index: 5; /* Acima da imagem de capa */
-}
+/* ==================================================
+--- O CSS .raspadinha-frente FOI REMOVIDO DAQUI ---
+==================================================
+*/
 
 /* O prêmio que fica por baixo */
 .raspadinha-fundo {
@@ -470,23 +426,19 @@ footer {
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #fefae0, #faedcd);
-    /* z-index: 1 (Fica atrás de tudo) */
-    z-index: 1; 
+    z-index: 1; /* Fica atrás da "tinta" */
 }
 
 /*
 ==================================================
---- INÍCIO DA CORREÇÃO (ANTI-SCROLL) ---
-Esta regra apanha o <canvas> que o JS cria.
-Coloca-o no meio (z-index: 2)
-E aplica o anti-scroll (touch-action: none) SÓ A ELE.
+--- ESTA É A REGRA CORRETA ---
 ==================================================
 */
 .raspadinha-container > canvas {
     position: absolute !important;
     top: 0;
     left: 0;
-    z-index: 2 !important; /* Fica no MEIO */
+    z-index: 2 !important; /* Fica na FRENTE do fundo */
     cursor: grab; 
     touch-action: none; /* Anti-scroll SÓ AQUI */
 }
