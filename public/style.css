@@ -408,12 +408,60 @@ footer {
     box-shadow: var(--shadow-medium);
     /* Força a proporção 16:9 */
     aspect-ratio: 16 / 9; 
-    
+
     /* ================================================== */
     /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
+    /* Esta linha foi MOVIDA para cá. */
     /* ================================================== */
-    /* A linha touch-action: none; FOI REMOVIDA DAQUI */
+    touch-action: none; /* Diz ao celular para NÃO rolar a página */
+}
+
+/* A "tinta" da raspadinha que será raspada */
+.raspadinha-frente {
+    position: absolute; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ddd;
+    cursor: grab;
+    z-index: 2; /* Fica na frente */
     /* ================================================== */
+    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
+    /* Esta linha foi REMOVIDA daqui. 
+    touch-action: none; */
+    /* ================================================== */
+    
+    /* Esta é a linha que permite o "passar" do clique para o canvas */
+    pointer-events: none; 
+}
+
+.raspadinha-frente:active {
+    cursor: grabbing;
+}
+/* Imagem de "capa" da raspadinha */
+.raspadinha-frente img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none; /* Impede que a imagem "agarre" o mouse */
+}
+/* Texto "Raspe Aqui" */
+.raspadinha-frente span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2em;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 5; /* Acima da imagem de capa */
 }
 
 /* O prêmio que fica por baixo */
@@ -429,26 +477,6 @@ footer {
     background: linear-gradient(135deg, #fefae0, #faedcd);
     z-index: 1; /* Fica atrás da "tinta" */
 }
-
-/*
-==================================================
---- INÍCIO DA CORREÇÃO (Z-INDEX + ANTI-SCROLL) ---
-Movemos o touch-action: none para DENTRO desta regra
-==================================================
-*/
-.raspadinha-container > canvas {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    z-index: 2 !important;
-    cursor: grab; /* Adiciona o cursor de "agarrar" */
-    touch-action: none; /* <-- ADICIONADO AQUI */
-}
-.raspadinha-container > canvas:active {
-    cursor: grabbing; /* Cursor ao clicar */
-}
-/* --- FIM DA CORREÇÃO (Z-INDEX + ANTI-SCROLL) --- */
-
 
 .raspadinha-fundo h3 {
     font-family: 'Montserrat', sans-serif;
