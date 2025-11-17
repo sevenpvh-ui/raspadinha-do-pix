@@ -412,10 +412,7 @@ footer {
     /* ================================================== */
     /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
     /* ================================================== */
-    /* Diz ao celular para NÃO rolar a página (MOVIDO PARA CÁ) */
-    touch-action: none; 
-    /* ================================================== */
-    /* --- FIM DA CORREÇÃO --- */
+    /* A linha touch-action: none; FOI REMOVIDA DAQUI */
     /* ================================================== */
 }
 
@@ -435,10 +432,8 @@ footer {
 
 /*
 ==================================================
---- INÍCIO DA CORREÇÃO (Z-INDEX) ---
-Esta nova regra força o <canvas> (camada cinza)
-criado pelo javascript a ficar NA FRENTE do
-.raspadinha-fundo (que tem z-index: 1).
+--- INÍCIO DA CORREÇÃO (Z-INDEX + ANTI-SCROLL) ---
+Movemos o touch-action: none para DENTRO desta regra
 ==================================================
 */
 .raspadinha-container > canvas {
@@ -447,11 +442,12 @@ criado pelo javascript a ficar NA FRENTE do
     left: 0;
     z-index: 2 !important;
     cursor: grab; /* Adiciona o cursor de "agarrar" */
+    touch-action: none; /* <-- ADICIONADO AQUI */
 }
 .raspadinha-container > canvas:active {
     cursor: grabbing; /* Cursor ao clicar */
 }
-/* --- FIM DA CORREÇÃO (Z-INDEX) --- */
+/* --- FIM DA CORREÇÃO (Z-INDEX + ANTI-SCROLL) --- */
 
 
 .raspadinha-fundo h3 {
