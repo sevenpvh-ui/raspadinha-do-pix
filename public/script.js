@@ -245,14 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cardJogo) cardJogo.style.display = 'block';
 
                 // ==================================================
-                // --- INÍCIO DA CORREÇÃO (BUG de Renderização) ---
+                // --- INÍCIO DA CORREÇÃO (requestAnimationFrame) ---
                 // ==================================================
-                // Adiciona um pequeno delay. Isso dá ao navegador 100ms
-                // para renderizar o 'cardJogo' (mudar de display:none para display:block)
-                // ANTES de tentarmos ler a largura (clientWidth) dele.
-                setTimeout(() => {
-                    iniciarRaspadinha(data.valorPremio); 
-                }, 100); // 100ms de delay
+                // Chama a função de iniciar o jogo
+                // A própria função vai esperar a renderização
+                iniciarRaspadinha(data.valorPremio);
                 // ==================================================
                 // --- FIM DA CORREÇÃO ---
                 // ==================================================
@@ -301,11 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cardJogo) cardJogo.style.display = 'block';
                 
                 // ==================================================
-                // --- INÍCIO DA CORREÇÃO (BUG de Renderização) ---
+                // --- INÍCIO DA CORREÇÃO (requestAnimationFrame) ---
                 // ==================================================
-                setTimeout(() => {
-                    iniciarRaspadinha(data.valorPremio);
-                }, 100); // 100ms de delay
+                // Chama a função de iniciar o jogo
+                // A própria função vai esperar a renderização
+                iniciarRaspadinha(data.valorPremio);
                 // ==================================================
                 // --- FIM DA CORREÇÃO ---
                 // ==================================================
@@ -343,66 +340,70 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     
     function iniciarRaspadinha(valorPremio) {
-        /* ==================================================
-        --- INÍCIO DA CORREÇÃO ---
-        A linha "raspadinhaFrenteEl.style.display = 'none'" FOI REMOVIDA DAQUI
-        ==================================================
-        */
-        
         if (!raspadinhaContainer) return;
 
-        try {
-            // 1. Configura o prêmio "escondido" (o valor já veio do socket)
-            if (valorPremio > 0) {
-                raspadinhaFundo.classList.remove('nao-ganhou');
-                raspadinhaTextoPremio.textContent = formatarBRL(valorPremio);
-            } else {
-                raspadinhaFundo.classList.add('nao-ganhou');
-                raspadinhaTextoPremio.textContent = "Não foi dessa vez!";
-            }
-
-            // 2. Inicializa a biblioteca ScratchCard
-            // ==================================================
-            // --- INÍCIO DA CORREÇÃO (BUG da Biblioteca) ---
-            // ==================================================
-            const sc = new ScratchCard('#raspadinha-container', {
-                scratchType: 'line', // <-- CORRIGIDO: De SCRATCH_TYPE.LINE para 'line'
-            // ==================================================
-            // --- FIM DA CORREÇÃO ---
-            // ==================================================
-                containerWidth: raspadinhaContainer.clientWidth,
-                containerHeight: raspadinhaContainer.clientWidth * 0.5625, // Força 16:9
-                imageForwardSrc: 'imagem-raspadinha.png', // Imagem de "tinta"
-                imageBackgroundSrc: '', // O fundo é o nosso HTML (raspadinha-fundo)
-                clearZoneRadius: 30, // Tamanho da "moeda"
-                percentToFinish: 70, // Precisa raspar 70% para revelar
-                callback: () => {
-                    // Função chamada quando raspa 70%
-                    if (valorPremio > 0) {
-                        raspadinhaStatus.textContent = `PARABÉNS! Você ganhou ${formatarBRL(valorPremio)}!`;
-                        raspadinhaStatus.style.color = "var(--color-raspadinha-gold)";
-                    } else {
-                        raspadinhaStatus.textContent = "Que pena! Tente novamente!";
-                        raspadinhaStatus.style.color = "var(--color-text-body)";
-                    }
-                    btnJogarNovamente.style.display = 'block';
+        // ==================================================
+        // --- INÍCIO DA CORREÇÃO (requestAnimationFrame) ---
+        // ==================================================
+        // Espera o navegador renderizar o 'display: block'
+        requestAnimationFrame(() => {
+            try {
+                // 1. Configura o prêmio "escondido" (o valor já veio do socket)
+                if (valorPremio > 0) {
+                    raspadinhaFundo.classList.remove('nao-ganhou');
+                    raspadinhaTextoPremio.textContent = formatarBRL(valorPremio);
+                } else {
+                    raspadinhaFundo.classList.add('nao-ganhou');
+                    raspadinhaTextoPremio.textContent = "Não foi dessa vez!";
                 }
-            });
 
-            // Inicia a raspadinha
-            sc.init().then(() => {
-                console.log("Raspadinha iniciada com sucesso.");
-            }).catch((err) => {
-                // Isso vai pegar se a imagem 'imagem-raspadinha.png' falhar
-                throw new Error(`Falha ao carregar imagem da raspadinha: ${err.message}`);
-            });
+                const containerWidth = raspadinhaContainer.clientWidth;
+                console.log("Iniciando raspadinha com largura:", containerWidth); // Para depuração
 
-        } catch (err) {
-            // Se qualquer coisa der errado (buscar prêmio, iniciar raspadinha), caímos aqui
-            console.error("Erro ao iniciar raspadinha:", err);
-            raspadinhaStatus.textContent = "Erro ao carregar seu jogo. Atualize a página.";
-            raspadinhaStatus.style.color = "red";
-        }
+                if (containerWidth === 0) {
+                    throw new Error("Largura do container é 0. Oculto?");
+                }
+
+                // 2. Inicializa a biblioteca ScratchCard
+                const sc = new ScratchCard('#raspadinha-container', {
+                    scratchType: 'line', 
+                    containerWidth: containerWidth, // Usa a largura lida
+                    containerHeight: containerWidth * 0.5625, // Força 16:9
+                    imageForwardSrc: 'imagem-raspadinha.png', // Imagem de "tinta"
+                    imageBackgroundSrc: '', // O fundo é o nosso HTML (raspadinha-fundo)
+                    clearZoneRadius: 30, // Tamanho da "moeda"
+                    percentToFinish: 70, // Precisa raspar 70% para revelar
+                    callback: () => {
+                        // Função chamada quando raspa 70%
+                        if (valorPremio > 0) {
+                            raspadinhaStatus.textContent = `PARABÉNS! Você ganhou ${formatarBRL(valorPremio)}!`;
+                            raspadinhaStatus.style.color = "var(--color-raspadinha-gold)";
+                        } else {
+                            raspadinhaStatus.textContent = "Que pena! Tente novamente!";
+                            raspadinhaStatus.style.color = "var(--color-text-body)";
+                        }
+                        btnJogarNovamente.style.display = 'block';
+                    }
+                });
+
+                // Inicia a raspadinha
+                sc.init().then(() => {
+                    console.log("Raspadinha iniciada com sucesso.");
+                }).catch((err) => {
+                    // Isso vai pegar se a imagem 'imagem-raspadinha.png' falhar
+                    throw new Error(`Falha ao carregar imagem da raspadinha: ${err.message}`);
+                });
+
+            } catch (err) {
+                // Se qualquer coisa der errado (buscar prêmio, iniciar raspadinha), caímos aqui
+                console.error("Erro ao iniciar raspadinha:", err);
+                raspadinhaStatus.textContent = "Erro ao carregar seu jogo. Atualize a página.";
+                raspadinhaStatus.style.color = "red";
+            }
+        }); // Fim do requestAnimationFrame
+        // ==================================================
+        // --- FIM DA CORREÇÃO ---
+        // ==================================================
     }
 
 
