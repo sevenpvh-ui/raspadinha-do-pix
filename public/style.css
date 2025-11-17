@@ -419,12 +419,6 @@ footer {
     /* ================================================== */
 }
 
-/* ==================================================
---- INÍCIO DA CORREÇÃO ---
-AS REGRAS CSS para .raspadinha-frente FORAM REMOVIDAS
-==================================================
-*/
-
 /* O prêmio que fica por baixo */
 .raspadinha-fundo {
     position: absolute;
@@ -438,6 +432,27 @@ AS REGRAS CSS para .raspadinha-frente FORAM REMOVIDAS
     background: linear-gradient(135deg, #fefae0, #faedcd);
     z-index: 1; /* Fica atrás da "tinta" */
 }
+
+/*
+==================================================
+--- INÍCIO DA CORREÇÃO (Z-INDEX) ---
+Esta nova regra força o <canvas> (camada cinza)
+criado pelo javascript a ficar NA FRENTE do
+.raspadinha-fundo (que tem z-index: 1).
+==================================================
+*/
+.raspadinha-container > canvas {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    z-index: 2 !important;
+    cursor: grab; /* Adiciona o cursor de "agarrar" */
+}
+.raspadinha-container > canvas:active {
+    cursor: grabbing; /* Cursor ao clicar */
+}
+/* --- FIM DA CORREÇÃO (Z-INDEX) --- */
+
 
 .raspadinha-fundo h3 {
     font-family: 'Montserrat', sans-serif;
