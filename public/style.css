@@ -419,49 +419,11 @@ footer {
     /* ================================================== */
 }
 
-/* A "tinta" da raspadinha que será raspada */
-.raspadinha-frente {
-    position: absolute; 
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #ddd;
-    cursor: grab;
-    z-index: 2; /* Fica na frente */
-    
-    /* touch-action: none; (FOI MOVIDO para .raspadinha-container) */
-    
-    /* pointer-events: none; (FOI REMOVIDO, causava o bug) */
-}
-
-.raspadinha-frente:active {
-    cursor: grabbing;
-}
-/* Imagem de "capa" da raspadinha */
-.raspadinha-frente img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none; /* Impede que a imagem "agarre" o mouse */
-}
-/* Texto "Raspe Aqui" */
-.raspadinha-frente span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 2em;
-    font-weight: 900;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    pointer-events: none;
-    z-index: 5; /* Acima da imagem de capa */
-}
+/* ==================================================
+--- INÍCIO DA CORREÇÃO ---
+AS REGRAS CSS para .raspadinha-frente FORAM REMOVIDAS
+==================================================
+*/
 
 /* O prêmio que fica por baixo */
 .raspadinha-fundo {
