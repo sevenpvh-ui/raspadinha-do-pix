@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Variáveis Globais ---
-    let PRECO_RASPADINHA_ATUAL = 2.00; // Padrão
+    let PRECO_RASPADINHA_ATUAL = 1.00; // Padrão
     let PREMIO_MAXIMO_ATUAL = 100.00; // Padrão
 
     // --- Seletores do DOM (Página Principal) ---
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ==================================================
                 // --- INÍCIO DA CORREÇÃO (BUG do Modal) ---
                 // ==================================================
-                fecharModal(); // <-- ESTA É A LINHA QUE FALTAVA
+                fecharModal(); // <-- ESTA É A LINHA QUE CORRIGE
                 // ==================================================
                 // --- FIM DA CORREÇÃO ---
                 // ==================================================
