@@ -408,6 +408,15 @@ footer {
     box-shadow: var(--shadow-medium);
     /* Força a proporção 16:9 */
     aspect-ratio: 16 / 9; 
+    
+    /* ================================================== */
+    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
+    /* ================================================== */
+    /* Diz ao celular para NÃO rolar a página (MOVIDO PARA CÁ) */
+    touch-action: none; 
+    /* ================================================== */
+    /* --- FIM DA CORREÇÃO --- */
+    /* ================================================== */
 }
 
 /* A "tinta" da raspadinha que será raspada */
@@ -420,16 +429,10 @@ footer {
     background-color: #ddd;
     cursor: grab;
     z-index: 2; /* Fica na frente */
-    /* ================================================== */
-    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
-    /* ================================================== */
-    touch-action: none; /* Diz ao celular para NÃO rolar a página */
-    /* ================================================== */
-    /* --- FIM DA CORREÇÃO --- */
-    /* ================================================== */
     
-    /* ESTA É A LINHA QUE CORRIGE O BUG DE "NÃO RASPAR" */
-    pointer-events: none; 
+    /* touch-action: none; (FOI MOVIDO para .raspadinha-container) */
+    
+    /* pointer-events: none; (FOI REMOVIDO, causava o bug) */
 }
 
 .raspadinha-frente:active {
