@@ -343,10 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================
     
     function iniciarRaspadinha(valorPremio) {
-        // --- INÍCIO DA CORREÇÃO (Esconde o Div estático) ---
-        const raspadinhaFrenteEl = document.getElementById('raspadinha-frente');
-        if (raspadinhaFrenteEl) raspadinhaFrenteEl.style.display = 'none';
-        // --- FIM DA CORREÇÃO ---
+        /* ==================================================
+        --- INÍCIO DA CORREÇÃO ---
+        A linha "raspadinhaFrenteEl.style.display = 'none'" FOI REMOVIDA DAQUI
+        ==================================================
+        */
         
         if (!raspadinhaContainer) return;
 
