@@ -1,14 +1,12 @@
-@@ -1,119 +1,120 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raspadinha do Pix - Raspe e Ganhe!</title>
-    <link rel="stylesheet" href="style.css?v=2.1"> 
-    <link rel="stylesheet" href="style.css?v=2.2"> 
+    <link rel="stylesheet" href="style.css?v=3.0">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-
+    
     <script src="https://cdn.jsdelivr.net/npm/scratchcard-js@1.5.0/build/scratchcard.min.js"></script>
 </head>
 <body>
@@ -18,26 +16,26 @@
     </header>
 
     <main>
-
+        
         <section id="card-comprar-raspadinha" class="card destaque-raspadinha">
             <h2>✨ PRÊMIO INSTANTÂNEO ✨</h2>
             <div class="premio-destaque-raspadinha">
                 <span class="premio-valor premio-valor-raspadinha" id="raspadinha-premio-maximo">R$ 100,00</span>
                 <p class="premio-sub">Raspe e ganhe na hora!</p>
             </div>
-
+            
             <button id="btn-comprar-raspadinha" class="btn-comprar btn-destaque btn-jogue-raspadinha">
                 Comprar Raspadinha (<span id="raspadinha-preco">R$ 2,00</span>)
             </button>
-
+            
             <p class="info-raspadinha" style="margin-top: 15px;">
                 (O prêmio é instantâneo e pago via PIX!)
             </p>
         </section>
-
+        
         <section id="card-area-jogo" class="card" style="display: none;">
             <h2>Raspe com o dedo ou mouse!</h2>
-
+            
             <div id="raspadinha-container" class="raspadinha-container">
                 <div id="raspadinha-frente" class="raspadinha-frente">
                     <img src="imagem-raspadinha.png" alt="Raspe Aqui">
@@ -47,9 +45,9 @@
                     <h3 id="raspadinha-texto-premio">R$ 100,00</h3>
                 </div>
             </div>
-
+            
             <p id="raspadinha-status" class="raspadinha-status-info">Boa sorte!</p>
-
+            
             <a href="index.html" id="btn-jogar-novamente" class="btn-comprar btn-comprar-azul" style="display: none; max-width: 400px; margin: 20px auto 0 auto;">
                 Jogar Novamente
             </a>
@@ -81,7 +79,7 @@
     <div id="modal-checkout" class="modal-overlay">
         <div class="modal-content">
              <span class="modal-close">&times;</span>
-
+            
             <div id="etapa-dados">
                 <h2 class="title-gradient" id="modal-titulo">Comprar Raspadinha</h2>
                 <form id="form-checkout">
@@ -115,8 +113,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js?v=2.1"></script>
-    <script src="script.js?v=2.2"></script>
-
+    <script src="script.js?v=3.0"></script>
+    
 </body>
 </html>
