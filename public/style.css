@@ -427,6 +427,9 @@ footer {
     /* ================================================== */
     /* --- FIM DA CORREÇÃO --- */
     /* ================================================== */
+    
+    /* ESTA É A LINHA QUE CORRIGE O BUG DE "NÃO RASPAR" */
+    pointer-events: none; 
 }
 
 .raspadinha-frente:active {
