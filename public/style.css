@@ -408,15 +408,11 @@ footer {
     box-shadow: var(--shadow-medium);
     /* Força a proporção 16:9 */
     aspect-ratio: 16 / 9; 
-
-    /* ================================================== */
-    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
-    /* Esta linha foi MOVIDA para cá. */
-    /* ================================================== */
-    touch-action: none; /* Diz ao celular para NÃO rolar a página */
+    
+    /* A linha touch-action: none; foi REMOVIDA DAQUI */
 }
 
-/* A "tinta" da raspadinha que será raspada */
+/* A "tinta" da raspadinha que será raspada (IMAGEM ESTÁTICA) */
 .raspadinha-frente {
     position: absolute; 
     top: 0;
@@ -425,15 +421,14 @@ footer {
     height: 100%;
     background-color: #ddd;
     cursor: grab;
-    z-index: 2; /* Fica na frente */
-    /* ================================================== */
-    /* --- INÍCIO DA CORREÇÃO (ANTI-SCROLL) --- */
-    /* Esta linha foi REMOVIDA daqui. 
-    touch-action: none; */
-    /* ================================================== */
     
-    /* Esta é a linha que permite o "passar" do clique para o canvas */
+    /* ================================================== */
+    /* --- INÍCIO DA CORREÇÃO --- */
+    /* z-index: 3 para ficar no TOPO */
+    z-index: 3; 
+    /* pointer-events: none; faz o clique/toque "atravessar" */
     pointer-events: none; 
+    /* ================================================== */
 }
 
 .raspadinha-frente:active {
@@ -475,8 +470,31 @@ footer {
     justify-content: center;
     align-items: center;
     background: linear-gradient(135deg, #fefae0, #faedcd);
-    z-index: 1; /* Fica atrás da "tinta" */
+    /* z-index: 1 (Fica atrás de tudo) */
+    z-index: 1; 
 }
+
+/*
+==================================================
+--- INÍCIO DA CORREÇÃO (ANTI-SCROLL) ---
+Esta regra apanha o <canvas> que o JS cria.
+Coloca-o no meio (z-index: 2)
+E aplica o anti-scroll (touch-action: none) SÓ A ELE.
+==================================================
+*/
+.raspadinha-container > canvas {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    z-index: 2 !important; /* Fica no MEIO */
+    cursor: grab; 
+    touch-action: none; /* Anti-scroll SÓ AQUI */
+}
+.raspadinha-container > canvas:active {
+    cursor: grabbing;
+}
+/* --- FIM DA CORREÇÃO --- */
+
 
 .raspadinha-fundo h3 {
     font-family: 'Montserrat', sans-serif;
