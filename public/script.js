@@ -1,89 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Configuração de Socket.IO ---
+    // ==========================================================
+    // CONFIGURAÇÃO INICIAL
+    // ==========================================================
+    
     let socket;
     try {
         socket = io();
-        console.log("Conectado ao servidor Socket.IO (Raspadinha).");
+        console.log("Conectado ao servidor Socket.IO.");
     } catch (err) {
-        console.error("Erro ao conectar ao Socket.IO:", err);
-        const btnComprar = document.getElementById('btn-comprar-raspadinha');
-        if (btnComprar) { btnComprar.disabled = true; btnComprar.textContent = "Erro de Conexão"; }
+        console.error("Erro Socket.IO:", err);
+        const btn = document.getElementById('btn-comprar-raspadinha');
+        if (btn) { btn.disabled = true; btn.textContent = "Erro de Conexão"; }
     }
 
-    // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 1.00;
     let PREMIO_MAXIMO_ATUAL = 100.00;
 
-    // --- Elementos DOM ---
+    // Seletores Principais
     const cardComprar = document.getElementById('card-comprar-raspadinha');
     const cardJogo = document.getElementById('card-area-jogo');
-    const btnComprarRaspadinha = document.getElementById('btn-comprar-raspadinha');
-    const raspadinhaPrecoEl = document.getElementById('raspadinha-preco');
-    const raspadinhaPremioMaximoEl = document.getElementById('raspadinha-premio-maximo');
-    
+    const btnComprar = document.getElementById('btn-comprar-raspadinha');
     const raspadinhaContainer = document.getElementById('raspadinha-container');
     const raspadinhaFundo = document.getElementById('raspadinha-fundo');
-    const raspadinhaTextoPremio = document.getElementById('raspadinha-texto-premio');
+    const raspadinhaTexto = document.getElementById('raspadinha-texto-premio');
     const raspadinhaStatus = document.getElementById('raspadinha-status');
     const btnJogarNovamente = document.getElementById('btn-jogar-novamente');
 
+    // Seletores Modal
     const modal = document.getElementById('modal-checkout');
     const btnCloseModal = document.querySelector('.modal-close');
     const etapaDados = document.getElementById('etapa-dados');
     const etapaPix = document.getElementById('etapa-pix');
     const btnGerarPix = document.getElementById('btn-gerar-pix'); 
     const btnCopiarPix = document.getElementById('btn-copiar-pix'); 
-    const pixQrCodeImg = document.getElementById('pix-qrcode-img');
-    const pixCopiaColaInput = document.getElementById('pix-copia-cola');
-    const aguardandoPagamentoEl = document.getElementById('aguardando-pagamento');
     const modalNome = document.getElementById('modal-nome');
     const modalTelefone = document.getElementById('modal-telefone');
-    const modalPrecoEl = document.getElementById('modal-preco');
-
+    
+    // Seletores Form Prêmios
     const formRecuperar = document.getElementById('form-recuperar-premios');
     const inputTelefoneRecuperar = document.getElementById('modal-telefone-recuperar');
-    const btnChecarPremios = document.getElementById('btn-checar-premios');
 
-    // --- Funções Auxiliares ---
-    function formatarBRL(valor) {
-        const numero = parseFloat(valor);
-        if (isNaN(numero)) return 'R$ --,--';
-        return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
+    // Formatação BRL
+    const formatarBRL = (v) => parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+    // 1. Carregar Config
     async function carregarConfig() {
         try {
-            const response = await fetch('/api/raspadinha/config');
-            if (!response.ok) throw new Error('Erro ao buscar config.');
-            const data = await response.json();
+            const res = await fetch('/api/raspadinha/config');
+            const data = await res.json();
             if (data.success) {
-                PRECO_RASPADINHA_ATUAL = parseFloat(data.preco || '2.00');
-                PREMIO_MAXIMO_ATUAL = parseFloat(data.premioMaximo || '100.00');
-                if (raspadinhaPrecoEl) raspadinhaPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
-                if (raspadinhaPremioMaximoEl) raspadinhaPremioMaximoEl.textContent = formatarBRL(PREMIO_MAXIMO_ATUAL);
-                if (modalPrecoEl) modalPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
+                PRECO_RASPADINHA_ATUAL = parseFloat(data.preco);
+                PREMIO_MAXIMO_ATUAL = parseFloat(data.premioMaximo);
+                document.getElementById('raspadinha-preco').textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
+                document.getElementById('raspadinha-premio-maximo').textContent = formatarBRL(PREMIO_MAXIMO_ATUAL);
+                document.getElementById('modal-preco').textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
             }
-        } catch (err) { console.error(err); }
+        } catch (e) { console.error(e); }
     }
     carregarConfig();
 
-    // --- Event Listeners ---
-    if (btnComprarRaspadinha) {
-        btnComprarRaspadinha.addEventListener('click', () => {
-            if (!socket || !socket.connected) { alert("Erro de conexão. Recarregue."); return; }
+    // 2. Modal e Compra
+    if (btnComprar) {
+        btnComprar.addEventListener('click', () => {
+            if (!socket?.connected) return alert("Sem conexão.");
             modal.style.display = 'flex'; modalNome.focus();
         });
     }
-    
     if (btnCloseModal) btnCloseModal.addEventListener('click', fecharModal);
-    if (modal) modal.addEventListener('click', (event) => { if (event.target === modal) fecharModal(); });
+    if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) fecharModal(); });
 
     function fecharModal() { 
-        if(modal) modal.style.display = 'none'; 
-        if(etapaDados) etapaDados.style.display = 'block';
-        if(etapaPix) etapaPix.style.display = 'none';
-        if(btnGerarPix) { btnGerarPix.disabled = false; btnGerarPix.textContent = "Gerar PIX"; }
+        modal.style.display = 'none'; 
+        etapaDados.style.display = 'block'; 
+        etapaPix.style.display = 'none';
+        btnGerarPix.disabled = false; btnGerarPix.textContent = "Gerar PIX";
         sessionStorage.removeItem('raspadinha_payment_id');
     }
 
@@ -91,192 +82,179 @@ document.addEventListener('DOMContentLoaded', () => {
         btnGerarPix.addEventListener('click', async () => {
             const nome = modalNome.value.trim();
             const telefone = modalTelefone.value.trim();
-            if (!nome || !telefone) { alert("Preencha todos os campos."); return; }
-            if (!/^\d{10,11}$/.test(telefone.replace(/\D/g,''))) { alert("Telefone inválido."); return; }
-            if (!socket || !socket.id) { alert("Erro de conexão."); return; }
-
+            if (!nome || !telefone) return alert("Preencha tudo.");
+            
             btnGerarPix.textContent = "Gerando..."; btnGerarPix.disabled = true;
 
             try {
-                const response = await fetch('/api/raspadinha/criar-pagamento', {
+                const res = await fetch('/api/raspadinha/criar-pagamento', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Socket-ID': socket.id },
+                    headers: { 'Content-Type': 'application/json', 'X-Socket-ID': socket.id },
                     body: JSON.stringify({ nome, telefone }),
                 });
-                const data = await response.json();
-                if (data && data.success) {
-                    pixQrCodeImg.src = `data:image/png;base64,${data.qrCodeBase64}`;
-                    pixCopiaColaInput.value = data.qrCodeCopiaCola;
-                    etapaDados.style.display = 'none'; etapaPix.style.display = 'block'; aguardandoPagamentoEl.style.display = 'block';
-                    sessionStorage.setItem('raspadinha_usuario_nome', nome); 
-                    sessionStorage.setItem('raspadinha_usuario_telefone', telefone);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('pix-qrcode-img').src = `data:image/png;base64,${data.qrCodeBase64}`;
+                    document.getElementById('pix-copia-cola').value = data.qrCodeCopiaCola;
+                    
+                    etapaDados.style.display = 'none'; 
+                    etapaPix.style.display = 'block';
+                    document.getElementById('aguardando-pagamento').style.display = 'block';
+                    
                     sessionStorage.setItem('raspadinha_payment_id', data.paymentId);
                 } else {
-                    alert(`Erro: ${data.message}`); btnGerarPix.textContent = "Gerar PIX"; btnGerarPix.disabled = false;
+                    alert(data.message); btnGerarPix.disabled = false;
                 }
-            } catch (err) {
-                alert("Erro de conexão."); btnGerarPix.textContent = "Gerar PIX"; btnGerarPix.disabled = false;
-            }
+            } catch (e) { alert("Erro conexão."); btnGerarPix.disabled = false; }
         });
     }
 
-    if(btnCopiarPix) {
+    if (btnCopiarPix) {
         btnCopiarPix.addEventListener('click', () => {
-            pixCopiaColaInput.select();
-            navigator.clipboard.writeText(pixCopiaColaInput.value);
-            btnCopiarPix.textContent = "Copiado!"; setTimeout(() => { btnCopiarPix.textContent = "Copiar Código"; }, 2000);
+            const input = document.getElementById('pix-copia-cola');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            btnCopiarPix.textContent = "Copiado!";
+            setTimeout(() => btnCopiarPix.textContent = "Copiar Código", 2000);
         });
     }
 
-    // --- Socket Listeners ---
+    // 3. Socket Listeners
     if (socket) {
-        socket.on('connect', () => { checarPagamentoPendente(); });
-        socket.on('configAtualizada', (data) => {
-            if (data.preco) { PRECO_RASPADINHA_ATUAL = parseFloat(data.preco); if (raspadinhaPrecoEl) raspadinhaPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL); }
-            if (data.premioMaximo) { PREMIO_MAXIMO_ATUAL = parseFloat(data.premioMaximo); if (raspadinhaPremioMaximoEl) raspadinhaPremioMaximoEl.textContent = formatarBRL(PREMIO_MAXIMO_ATUAL); }
-        });
+        socket.on('connect', checarPagamentoPendente);
+        
         socket.on('pagamentoAprovado', (data) => {
-            const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
-            if (data.paymentId === paymentIdPendente) {
+            if (data.paymentId === sessionStorage.getItem('raspadinha_payment_id')) {
                 sessionStorage.removeItem('raspadinha_payment_id');
                 fecharModal();
-                if (cardComprar) cardComprar.style.display = 'none';
-                if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
-                if (cardJogo) cardJogo.style.display = 'block';
-                iniciarRaspadinha(data.valorPremio);
+                prepararJogo(data.valorPremio);
             }
         });
     }
 
     async function checarPagamentoPendente() {
-        const paymentIdPendente = sessionStorage.getItem('raspadinha_payment_id');
-        if (!paymentIdPendente) return;
+        const pid = sessionStorage.getItem('raspadinha_payment_id');
+        if (!pid) return;
         try {
-            const response = await fetch('/api/raspadinha/checar-pagamento', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId: paymentIdPendente }),
+            const res = await fetch('/api/raspadinha/checar-pagamento', {
+                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({paymentId: pid})
             });
-            const data = await response.json();
+            const data = await res.json();
             if (data.success) {
                 sessionStorage.removeItem('raspadinha_payment_id');
                 fecharModal();
-                if (cardComprar) cardComprar.style.display = 'none';
-                if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
-                if (cardJogo) cardJogo.style.display = 'block';
-                iniciarRaspadinha(data.valorPremio);
-            } else {
-                mostrarModalAguardando();
+                prepararJogo(data.valorPremio);
             }
-        } catch (err) { mostrarModalAguardando(); }
+        } catch(e) {}
     }
 
-    function mostrarModalAguardando() {
-        if (modal && etapaDados && etapaPix && aguardandoPagamentoEl) {
-            etapaDados.style.display = 'none'; etapaPix.style.display = 'block'; aguardandoPagamentoEl.style.display = 'block';
-            document.getElementById('pix-qrcode-container').style.display = 'none';
-            document.getElementById('pix-copia-cola').closest('.form-grupo').style.display = 'none';
-            modal.style.display = 'flex';
-        }
+    function prepararJogo(valorPremio) {
+        if (cardComprar) cardComprar.style.display = 'none';
+        if (formRecuperar) formRecuperar.closest('.card').style.display = 'none';
+        if (cardJogo) cardJogo.style.display = 'block';
+        
+        // Inicia a raspadinha
+        iniciarRaspadinha(valorPremio);
     }
 
     // ==========================================================
-    // --- FUNÇÃO DE INICIAR O JOGO (CORRIGIDA) ---
+    // 4. LÓGICA DO JOGO (CORRIGIDA)
     // ==========================================================
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
-        // Aguarda o navegador desenhar a tela
+        // Aguarda renderização
         requestAnimationFrame(() => {
             try {
-                // Define o texto do prêmio no fundo
+                // 1. Configura o prêmio (fundo)
                 if (valorPremio > 0) {
                     raspadinhaFundo.classList.remove('nao-ganhou');
-                    raspadinhaTextoPremio.textContent = formatarBRL(valorPremio);
+                    raspadinhaTexto.textContent = formatarBRL(valorPremio);
                 } else {
                     raspadinhaFundo.classList.add('nao-ganhou');
-                    raspadinhaTextoPremio.textContent = "Não foi dessa vez!";
+                    raspadinhaTexto.textContent = "Não foi dessa vez!";
                 }
 
-                const containerWidth = raspadinhaContainer.clientWidth;
-                if (containerWidth === 0) console.warn("Aviso: Largura do container é 0.");
+                const width = raspadinhaContainer.clientWidth;
+                if (width === 0) return console.error("Largura 0");
 
-                // Limpa qualquer canvas antigo (prevenção de duplicação)
-                const canvasAntigo = raspadinhaContainer.querySelector('canvas');
-                if (canvasAntigo) canvasAntigo.remove();
+                // Remove canvas antigo se houver
+                const oldCanvas = raspadinhaContainer.querySelector('canvas');
+                if(oldCanvas) oldCanvas.remove();
 
-                // Inicializa a biblioteca com o tipo de raspagem CORRETO
+                // 2. Inicia ScratchCard
                 const sc = new ScratchCard('#raspadinha-container', {
-                    // AQUI ESTAVA O ERRO: 'line' não funciona bem. Usamos SPRAY.
-                    scratchType: ScratchCard.SCRATCH_TYPE.SPRAY, 
-                    containerWidth: containerWidth,
-                    containerHeight: containerWidth * 0.5625, // Proporção 16:9
-                    imageForwardSrc: 'imagem-raspadinha.png', // CERTIFIQUE-SE QUE O NOME DO ARQUIVO É ESTE (minusculas)
-                    htmlBackground: '', // O fundo já está no HTML (div raspadinha-fundo)
-                    clearZoneRadius: 40, // Tamanho do "dedo"
-                    nPoints: 100, // Densidade do spray
-                    pointSize: 4, // Tamanho dos pontos do spray
-                    percentToFinish: 60, // Raspar 60% para finalizar
+                    scratchType: ScratchCard.SCRATCH_TYPE.SPRAY, // TIPO SPRAY É MELHOR
+                    containerWidth: width,
+                    containerHeight: width * 0.5625, // 16:9
+                    imageForwardSrc: '/imagem-raspadinha.png', // CAMINHO ABSOLUTO (COM BARRA)
+                    htmlBackground: '', 
+                    clearZoneRadius: 40,
+                    nPoints: 100,
+                    pointSize: 4,
                     callback: () => {
                         if (valorPremio > 0) {
-                            raspadinhaStatus.textContent = `PARABÉNS! Você ganhou ${formatarBRL(valorPremio)}!`;
+                            raspadinhaStatus.textContent = `PARABÉNS! Ganhou ${formatarBRL(valorPremio)}!`;
                             raspadinhaStatus.style.color = "var(--color-raspadinha-gold)";
                         } else {
                             raspadinhaStatus.textContent = "Que pena! Tente novamente!";
-                            raspadinhaStatus.style.color = "var(--color-text-body)";
                         }
                         btnJogarNovamente.style.display = 'block';
                     }
                 });
 
-                sc.init().then(() => {
-                    console.log("Raspadinha iniciada com sucesso.");
-                }).catch((err) => {
-                    console.error("Erro ao iniciar raspadinha:", err);
-                    raspadinhaStatus.textContent = "Erro ao carregar a imagem. Verifique se 'imagem-raspadinha.png' existe na pasta public.";
-                    raspadinhaStatus.style.color = "red";
-                });
+                sc.init()
+                    .then(() => console.log("Raspadinha carregada!"))
+                    .catch((err) => {
+                        console.error("Erro imagem:", err);
+                        raspadinhaStatus.innerHTML = "Erro ao carregar imagem.<br>Verifique se o arquivo <b>imagem-raspadinha.png</b> existe na pasta public.";
+                        raspadinhaStatus.style.color = "red";
+                    });
 
-            } catch (err) {
-                console.error("Erro crítico no jogo:", err);
-            }
+            } catch (e) { console.error("Erro fatal:", e); }
         });
     }
 
-    // --- Recuperar Prêmios ---
+    // 5. Consultar Prêmios (Código mantido, simplificado)
     if (formRecuperar) {
         formRecuperar.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const telefone = inputTelefoneRecuperar.value.trim();
-            btnChecarPremios.disabled = true; btnChecarPremios.textContent = 'Buscando...';
+            const tel = inputTelefoneRecuperar.value.trim();
             try {
-                const response = await fetch('/api/raspadinha/checar-premios', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: telefone }),
+                const res = await fetch('/api/raspadinha/checar-premios', {
+                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({telefone:tel})
                 });
-                const data = await response.json();
-                if (data.success) criarModalPremios(data.premios);
+                const data = await res.json();
+                if(data.success) mostrarPremios(data.premios);
                 else alert(data.message);
-            } catch (err) { alert("Erro de conexão."); } 
-            finally { btnChecarPremios.disabled = false; btnChecarPremios.textContent = 'Verificar Prêmios'; }
+            } catch(e){ alert("Erro conexão"); }
         });
     }
 
-    function criarModalPremios(premios) {
-        let modalPremios = document.createElement('div');
-        modalPremios.classList.add('modal-overlay');
-        modalPremios.style.display = 'flex';
-        let html = `<div class="modal-content" style="max-width: 600px;">
-                <span class="modal-close" id="modal-premios-fechar">&times;</span>
-                <h2 class="title-gradient">Meus Prêmios</h2><div id="modal-meus-premios-lista">`;
-        if (premios && premios.length > 0) {
-            premios.forEach(p => {
-                let cls = p.status_pagamento_premio === 'Pendente' ? 'status-pendente' : 'status-pago';
+    function mostrarPremios(lista) {
+        const div = document.createElement('div');
+        div.className = 'modal-overlay';
+        div.style.display = 'flex';
+        
+        let html = `<div class="modal-content" style="max-width:600px;">
+            <span class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</span>
+            <h2 class="title-gradient">Seus Prêmios</h2><div id="modal-meus-premios-lista">`;
+            
+        if(lista.length){
+            lista.forEach(p => {
                 html += `<div class="premio-encontrado-item">
-                        <div class="premio-info-wrapper"><span class="premio-valor-consulta">${formatarBRL(p.valor_premio)}</span><span class="premio-data-consulta">${p.data_formatada}</span></div>
-                        <span class="status-pagamento ${cls}">${p.status_pagamento_premio}</span></div>`;
+                    <div class="premio-info-wrapper">
+                        <span class="premio-valor-consulta">${formatarBRL(p.valor_premio)}</span>
+                        <span class="premio-data-consulta">${p.data_formatada}</span>
+                    </div>
+                    <span class="status-pagamento ${p.status_pagamento_premio === 'Pendente' ? 'status-pendente' : 'status-pago'}">${p.status_pagamento_premio}</span>
+                </div>`;
             });
-        } else { html += `<p>Nenhum prêmio encontrado.</p>`; }
-        html += `</div></div>`;
-        modalPremios.innerHTML = html;
-        document.body.appendChild(modalPremios);
-        modalPremios.addEventListener('click', (e) => { if (e.target.id === 'modal-premios-fechar' || e.target === modalPremios) modalPremios.remove(); });
+        } else { html += "<p>Nada encontrado.</p>"; }
+        
+        html += "</div></div>";
+        div.innerHTML = html;
+        document.body.appendChild(div);
+        div.onclick = (e) => { if(e.target === div) div.remove(); }
     }
 });
