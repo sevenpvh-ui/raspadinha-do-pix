@@ -1,4 +1,4 @@
-/* Importação de fontes profissionais */
+/* Importação de fontes */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap');
 
 :root {
@@ -14,129 +14,47 @@
 }
 
 body {
-    font-family: 'Lato', sans-serif;
-    font-weight: 400;
-    background-color: var(--color-bg-light);
-    color: var(--color-text-body);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    line-height: 1.6;
+    font-family: 'Lato', sans-serif; font-weight: 400;
+    background-color: var(--color-bg-light); color: var(--color-text-body);
+    margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; line-height: 1.6;
 }
 
-/* --- Layout Geral --- */
 header {
-    width: 100%;
-    text-align: center;
-    padding: 25px 0;
-    margin-bottom: 30px;
-    background-color: var(--color-bg-white);
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: var(--shadow-soft);
-    position: relative;
+    width: 100%; text-align: center; padding: 25px 0; margin-bottom: 30px;
+    background-color: var(--color-bg-white); border-bottom: 1px solid #e0e0e0;
+    box-shadow: var(--shadow-soft); position: relative;
 }
 
-h1, h2 {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    color: var(--color-text-heading);
-    margin: 0;
-}
+h1, h2 { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--color-text-heading); margin: 0; }
 
 h1.title-gradient {
-    font-size: 3.5em;
-    font-weight: 900;
-    margin: 10px 0;
+    font-size: 3.5em; font-weight: 900; margin: 10px 0;
     background: linear-gradient(90deg, var(--color-raspadinha-gold), var(--color-pix-green));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent;
 }
 
-.slogan {
-    font-size: 1.2em;
-    color: var(--color-text-body);
-    margin-top: -5px;
-}
+.slogan { font-size: 1.2em; color: var(--color-text-body); margin-top: -5px; }
 
-main {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    padding: 20px;
-    max-width: 900px;
-    width: 100%;
-    flex-grow: 1; 
-}
+main { display: flex; flex-direction: column; gap: 30px; padding: 20px; max-width: 900px; width: 100%; flex-grow: 1; }
 
 .card {
-    background-color: var(--color-bg-white);
-    padding: 35px;
-    border-radius: 12px; 
-    text-align: center;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid #e9e9e9;
+    background-color: var(--color-bg-white); padding: 35px; border-radius: 12px; 
+    text-align: center; box-shadow: var(--shadow-soft); border: 1px solid #e9e9e9;
     transition: all 0.3s ease;
 }
+.card:hover { box-shadow: var(--shadow-medium); transform: translateY(-3px); }
 
-.card:hover {
-    box-shadow: var(--shadow-medium);
-    transform: translateY(-3px);
-}
-
-footer {
-    width: 100%;
-    text-align: center;
-    padding: 20px 0;
-    margin-top: auto;
-    background-color: #333;
-    color: #f0f0f0;
-    font-size: 0.9em;
-}
-
-.text-pix { color: var(--color-pix-green); font-weight: 700; }
-
-/* --- Botões --- */
-.btn-comprar {
-    background-color: var(--color-accent-blue);
-    color: #ffffff;
-    border: none;
-    padding: 12px 25px;
-    font-size: 1.1em;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    width: 100%;
-}
-.btn-comprar:hover { background-color: #0056b3; transform: scale(1.02); }
-.btn-comprar.btn-destaque { background-color: var(--color-raspadinha-gold); }
-.btn-comprar.btn-destaque:hover { background-color: #d48c0b; }
-.btn-comprar-azul { background-color: var(--color-accent-blue); }
-.btn-comprar-azul:hover { background-color: #0056b3; }
-
-
-/* --- ESTILOS DESTAQUE RASPADINHA --- */
+/* --- Estilo Original Bonito --- */
 .destaque-raspadinha {
     background: linear-gradient(135deg, #f39c12, #e67e22); 
     border: none; color: #ffffff; padding: 40px; 
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); 
 }
-.destaque-raspadinha h2 {
-    font-size: 2.2em; color: #ffffff; margin-bottom: 25px;
-    text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-}
-.premio-destaque-raspadinha { margin-bottom: 20px; }
+.destaque-raspadinha h2 { font-size: 2.2em; color: #ffffff; margin-bottom: 25px; text-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+
 .premio-valor-raspadinha {
-    font-family: 'Montserrat', sans-serif; font-weight: 900; 
-    display: block; line-height: 1.1; font-size: 5em; 
-    color: #ffffff !important; 
+    font-family: 'Montserrat', sans-serif; font-weight: 900; display: block; 
+    line-height: 1.1; font-size: 5em; color: #ffffff !important; 
     text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
     animation: jackpot-glow 2s infinite alternate;
 }
@@ -144,199 +62,98 @@ footer {
     from { text-shadow: 3px 3px 8px rgba(0,0,0,0.4); }
     to { text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 3px 3px 8px rgba(0,0,0,0.4); }
 }
-.destaque-raspadinha .premio-sub { font-size: 1.2em; color: #f0f0f0; font-weight: 700; margin-top: 5px; }
+.premio-sub { font-size: 1.2em; color: #f0f0f0; font-weight: 700; margin-top: 5px; }
 .info-raspadinha { font-size: 1em; font-style: italic; opacity: 0.9; margin-top: 15px; color: #fff; }
-.btn-jogue-raspadinha {
-    width: 80%; max-width: 400px; padding: 18px; font-size: 1.6em; margin-top: 25px;
-    animation: throb-raspadinha 1.5s infinite ease-in-out;
+
+/* Botões */
+.btn-comprar {
+    background-color: var(--color-accent-blue); color: #ffffff; border: none;
+    padding: 12px 25px; font-size: 1.1em; font-family: 'Montserrat', sans-serif;
+    font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 8px;
+    transition: all 0.3s ease; width: 100%;
 }
+.btn-comprar:hover { background-color: #0056b3; transform: scale(1.02); }
+.btn-comprar.btn-destaque { background-color: var(--color-raspadinha-gold); }
+.btn-comprar.btn-destaque:hover { background-color: #d48c0b; }
+.btn-comprar-azul { background-color: var(--color-accent-blue); }
+.btn-jogue-raspadinha { width: 80%; max-width: 400px; padding: 18px; font-size: 1.6em; margin-top: 25px; animation: throb-raspadinha 1.5s infinite ease-in-out; }
 @keyframes throb-raspadinha {
     0%, 100% { transform: scale(1); box-shadow: var(--shadow-soft); }
     50% { transform: scale(1.03); box-shadow: 0 0 20px var(--color-raspadinha-gold), 0 0 10px var(--color-accent-blue); }
 }
 
-/* --- MODAL DE CHECKOUT --- */
-.modal-overlay {
-    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-    width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); 
-    backdrop-filter: blur(5px); justify-content: center; align-items: center;
-}
-.modal-content {
-    background-color: var(--color-bg-white); margin: auto; padding: 30px;
-    border-radius: 12px; box-shadow: var(--shadow-medium);
-    width: 90%; max-width: 500px; text-align: center;
-    position: relative; animation-name: animatetop; animation-duration: 0.4s
-}
-@keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
-.modal-close {
-    color: #aaa; float: right; font-size: 28px; font-weight: bold;
-    position: absolute; top: 10px; right: 20px; cursor: pointer;
-}
-.modal-close:hover { color: var(--color-text-heading); }
-.modal-content h2 { margin-bottom: 25px; font-size: 1.8em; }
-#form-checkout { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-.form-grupo { text-align: left; }
-.form-grupo label { display: block; margin-bottom: 5px; font-weight: 700; color: var(--color-text-heading); }
-.form-grupo input {
-    width: 100%; padding: 12px; font-family: 'Lato', sans-serif; font-size: 1.1em;
-    border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; 
-}
-.form-grupo input:focus { outline: none; border-color: var(--color-raspadinha-gold); box-shadow: 0 0 8px rgba(243, 156, 18, 0.5); }
-#resumo-preco { margin-top: 15px; font-size: 1.1em; }
-#modal-preco { font-size: 1.6em; font-weight: 900; }
-.modal-info { font-size: 0.9em; opacity: 0.8; margin-top: 20px; margin-bottom: 25px; }
-.loader-pix {
-    border: 6px solid #f3f3f3; border-top: 6px solid var(--color-raspadinha-gold);
-    border-radius: 50%; width: 40px; height: 40px;
-    animation: spin 1.5s linear infinite; margin: 20px auto 10px auto;
-}
+footer { width: 100%; text-align: center; padding: 20px 0; margin-top: auto; background-color: #333; color: #f0f0f0; font-size: 0.9em; }
+
+/* --- Modal --- */
+.modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+.modal-content { background-color: var(--color-bg-white); margin: auto; padding: 30px; border-radius: 12px; box-shadow: var(--shadow-medium); width: 90%; max-width: 500px; text-align: center; position: relative; }
+.modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 10px; right: 20px; cursor: pointer; }
+.form-grupo { text-align: left; margin-bottom: 15px; }
+.form-grupo label { display: block; margin-bottom: 5px; font-weight: 700; }
+.form-grupo input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+.text-pix { color: var(--color-pix-green); font-weight: 700; }
+.loader-pix { border: 6px solid #f3f3f3; border-top: 6px solid var(--color-raspadinha-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1.5s linear infinite; margin: 20px auto 10px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* --- RESPONSIVIDADE --- */
+/* --- Responsividade --- */
 @media (max-width: 768px) {
     h1.title-gradient { font-size: 2.8em; }
     .destaque-raspadinha h2 { font-size: 1.8em; }
     .premio-valor-raspadinha { font-size: 4em; }
+    .btn-jogue-raspadinha { font-size: 1.4em; padding: 15px; }
 }
 @media (max-width: 480px) {
     h1.title-gradient { font-size: 2.2em; }
     .card { padding: 20px; }
     .destaque-raspadinha h2 { font-size: 1.6em; }
     .premio-valor-raspadinha { font-size: 3.5em; }
+    .btn-jogue-raspadinha { font-size: 1.3em; }
     .modal-content { padding: 20px; }
 }
 
+/* --- Consulta Prêmios --- */
+#modal-meus-premios-lista { text-align: left; max-height: 60vh; overflow-y: auto; padding: 0 15px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin-top: 20px; }
+.premio-encontrado-item { padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.premio-info-wrapper { display: flex; flex-direction: column; }
+.premio-valor-consulta { font-size: 1.3em; font-weight: 700; color: var(--color-raspadinha-gold); }
+.status-pagamento { font-weight: bold; padding: 3px 8px; border-radius: 4px; color: #fff; font-size: 0.85em; text-transform: uppercase; white-space: nowrap; }
+.status-pendente { background-color: #ffc107; color: #333; }
+.status-pago { background-color: #28a745; }
+
 /* ==============================================================
-=== CONFIGURAÇÃO DA ÁREA DE JOGO (Z-INDEX CRÍTICO) === 
+   CORREÇÃO CRÍTICA DE Z-INDEX E SCROLL (MANTER NO FINAL)
 ==============================================================
 */
 
 .raspadinha-container {
-    width: 100%;
-    max-width: 450px;
-    margin: 10px auto 0 auto;
-    position: relative; /* Pai Relativo */
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow-medium);
-    aspect-ratio: 16 / 9; 
+    width: 100%; max-width: 450px; margin: 10px auto 0 auto;
+    position: relative; border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow-medium); aspect-ratio: 16 / 9; 
 }
 
-/* O Prémio (Camada de Fundo) */
-.raspadinha-fundo {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center;
-    background: linear-gradient(135deg, #fefae0, #faedcd);
-    
-    /* IMPORTANTE: Z-Index 1 (Fundo) */
-    z-index: 1;
-}
-
-.raspadinha-fundo h3 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 3em; font-weight: 900;
-    color: var(--color-text-heading);
-    margin: 0; padding: 0; text-align: center;
-    user-select: none; /* Impede seleção de texto */
-}
-.raspadinha-fundo.nao-ganhou h3 { font-size: 2em; color: var(--color-text-body); }
-
-/* O Canvas de Raspadinha (Criado pelo JS) */
-.raspadinha-container canvas {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    
-    /* IMPORTANTE: Z-Index 10 (Frente) */
-    z-index: 10 !important; 
-    
-    cursor: grab;
-    /* IMPORTANTE: Impede o scroll ao tocar no canvas */
-    touch-action: none !important; 
-}
-.raspadinha-container canvas:active {
-    cursor: grabbing;
-}
-
-.raspadinha-status-info {
-    margin-top: 20px; font-size: 1.1em; font-weight: 700;
-    color: var(--color-text-body); min-height: 1.5em;
-}
-
-/* --- CONSULTA DE PRÊMIOS --- */
-#form-recuperar-premios { display: flex; flex-direction: column; gap: 10px; }
-#modal-meus-premios-lista {
-    text-align: left; max-height: 60vh; overflow-y: auto;
-    padding: 0 15px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin-top: 20px;
-}
-.premio-encontrado-item {
-    padding: 15px; border-bottom: 1px solid #f0f0f0;
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-}
-.premio-encontrado-item:last-child { border-bottom: none; }
-.premio-info-wrapper { display: flex; flex-direction: column; }
-.premio-info-wrapper .premio-valor-consulta { font-size: 1.3em; font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--color-raspadinha-gold); }
-.premio-info-wrapper .premio-data-consulta { font-size: 0.9em; color: var(--color-text-body); }
-.status-pagamento { font-weight: bold; padding: 3px 8px; border-radius: 4px; color: #fff; font-size: 0.85em; text-transform: uppercase; white-space: nowrap; }
-.status-pendente { background-color: #ffc107; color: #333; }
-.status-pago { background-color: #28a745; }
-#modal-meus-premios-lista p { padding: 20px; text-align: center; font-style: italic; opacity: 0.8; }
-.legal-links { padding-top: 15px; border-top: 1px solid #444; margin-top: 15px; max-width: 800px; margin-left: auto; margin-right: auto; padding-left: 15px; padding-right: 15px; }
-.legal-warning { font-size: 0.85em; color: #ccc; opacity: 0.7; line-height: 1.5; margin: 5px 0; }
-/* style.css */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap');
-
-:root {
-    --color-pix-green: #00B6AA; --color-accent-blue: #007bff; --color-raspadinha-gold: #f39c12; 
-    --color-bg-light: #f4f7f6; --color-bg-white: #ffffff; --color-text-heading: #2c3e50; --color-text-body: #555555; 
-    --shadow-medium: 0 6px 20px rgba(0, 0, 0, 0.08);
-}
-
-body { font-family: 'Lato', sans-serif; background-color: var(--color-bg-light); color: var(--color-text-body); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-header { width: 100%; text-align: center; padding: 25px 0; background-color: var(--color-bg-white); box-shadow: var(--shadow-medium); }
-h1.title-gradient { font-family: 'Montserrat', sans-serif; font-size: 2.5em; font-weight: 900; background: linear-gradient(90deg, var(--color-raspadinha-gold), var(--color-pix-green)); -webkit-background-clip: text; color: transparent; margin: 0; }
-
-main { display: flex; flex-direction: column; gap: 30px; padding: 20px; max-width: 900px; width: 100%; flex-grow: 1; }
-.card { background-color: var(--color-bg-white); padding: 30px; border-radius: 12px; text-align: center; box-shadow: var(--shadow-medium); }
-
-/* Botões */
-.btn-comprar { background-color: var(--color-accent-blue); color: #fff; border: none; padding: 12px 25px; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1.1em; }
-.btn-destaque { background-color: var(--color-raspadinha-gold); }
-.btn-comprar-azul { background-color: var(--color-accent-blue); }
-
-/* Modal */
-.modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
-.modal-content { background-color: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; position: relative; }
-.modal-close { position: absolute; top: 10px; right: 20px; font-size: 28px; cursor: pointer; }
-.form-grupo input { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-
-/* --- AREA DO JOGO (CRÍTICO) --- */
-.raspadinha-container {
-    width: 100%; max-width: 450px; margin: 10px auto; position: relative;
-    border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-medium);
-    aspect-ratio: 16 / 9;
-}
-
-/* Fundo (Prêmio) - Z-INDEX 1 */
+/* Fundo (O Prêmio) */
 .raspadinha-fundo {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     display: flex; justify-content: center; align-items: center;
     background: linear-gradient(135deg, #fefae0, #faedcd);
+    /* Fica Atrás */
     z-index: 1;
-    user-select: none;
+    user-select: none; /* Não deixa selecionar texto */
 }
-.raspadinha-fundo h3 { font-family: 'Montserrat', sans-serif; font-size: 3em; margin: 0; color: #2c3e50; }
-.raspadinha-fundo.nao-ganhou h3 { font-size: 2em; color: #555; }
 
-/* Canvas (Tinta) - Z-INDEX 10 + TOUCH-ACTION */
+.raspadinha-fundo h3 { font-family: 'Montserrat', sans-serif; font-size: 3em; font-weight: 900; color: var(--color-text-heading); margin: 0; padding: 0; text-align: center; }
+.raspadinha-fundo.nao-ganhou h3 { font-size: 2em; color: var(--color-text-body); }
+
+/* Canvas (A Tinta Cinza) */
 .raspadinha-container canvas {
     position: absolute !important; top: 0; left: 0;
     width: 100% !important; height: 100% !important;
-    z-index: 10 !important;
-    touch-action: none !important; /* Evita scroll no celular */
+    /* Fica na Frente */
+    z-index: 10 !important; 
     cursor: grab;
+    /* Trava o scroll no celular */
+    touch-action: none !important; 
 }
+.raspadinha-container canvas:active { cursor: grabbing; }
 
+.raspadinha-status-info { margin-top: 20px; font-size: 1.1em; font-weight: 700; color: var(--color-text-body); min-height: 1.5em; }
