@@ -1,46 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==================================================================
-    // 1. IMAGEM DE RASPAGEM (PRATEADA SÓLIDA - BASE64)
-    // ==================================================================
-    // Esta é uma imagem real de textura prateada convertida em texto.
-    // Ela é opaca e vai cobrir o prêmio completamente.
+    // --- IMAGEM PRATEADA (BASE64) ---
     const IMG_TINTA_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEISURBVHhe7dQxDQAwDMCwNhxj/5IGYi9HgZzA9t2Z/==";
 
-    // --- CONFIGURAÇÃO SOCKET.IO ---
     let socket;
     try {
         socket = io();
         console.log("Conectado ao servidor Socket.IO.");
     } catch (err) {
         console.error("Erro Socket:", err);
-        alert("Erro de conexão. Recarregue a página.");
+        // Não bloqueia o resto do script se o socket falhar
     }
 
-    // --- VARIÁVEIS GLOBAIS ---
+    // --- VARIÁVEIS ---
     let PRECO_RASPADINHA_ATUAL = 1.00;
     let PREMIO_MAXIMO_ATUAL = 100.00;
 
-    // --- ELEMENTOS ---
+    // --- SELETORES ---
     const modal = document.getElementById('modal-checkout');
+    const btnCloseModal = document.querySelector('.modal-close');
+    
     const btnComprar = document.getElementById('btn-comprar-raspadinha');
     const btnSimular = document.getElementById('btn-simular-teste');
+    const btnGerarPix = document.getElementById('btn-gerar-pix');
+    const btnCopiarPix = document.getElementById('btn-copiar-pix');
+    
+    const etapaDados = document.getElementById('etapa-dados');
+    const etapaPix = document.getElementById('etapa-pix');
+    
     const raspadinhaContainer = document.getElementById('raspadinha-container');
     const raspadinhaFundo = document.getElementById('raspadinha-fundo');
     const raspadinhaTexto = document.getElementById('raspadinha-texto-premio');
     const raspadinhaStatus = document.getElementById('raspadinha-status');
     const btnJogarNovamente = document.getElementById('btn-jogar-novamente');
-    
-    // --- MODAL ELEMENTOS ---
-    const etapaDados = document.getElementById('etapa-dados');
-    const etapaPix = document.getElementById('etapa-pix');
-    const btnGerarPix = document.getElementById('btn-gerar-pix');
-    const btnCopiarPix = document.getElementById('btn-copiar-pix');
 
-    // --- FORMATADOR ---
+    // --- CONFIG ---
     const formatarBRL = (v) => parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    // --- CARREGAR CONFIG ---
     async function carregarConfig() {
         try {
             const res = await fetch('/api/raspadinha/config');
@@ -59,35 +55,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     carregarConfig();
 
-    // --- MODAL E BOTÕES ---
+    // --- MODAL ---
     if (btnComprar) {
-        btnComprar.addEventListener('click', () => {
-            modal.style.display = 'flex';
-        });
+        btnComprar.addEventListener('click', () => { modal.style.display = 'flex'; });
     }
-    
-    document.querySelector('.modal-close').addEventListener('click', fecharModal);
-    
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', fecharModal);
+    }
+
     function fecharModal() {
         modal.style.display = 'none';
         etapaDados.style.display = 'block';
         etapaPix.style.display = 'none';
-        btnGerarPix.disabled = false; 
-        btnGerarPix.textContent = "Gerar PIX";
+        if(btnGerarPix) {
+            btnGerarPix.disabled = false; 
+            btnGerarPix.textContent = "Gerar PIX";
+        }
         sessionStorage.removeItem('raspadinha_payment_id');
     }
 
-    // --- BOTÃO DE SIMULAÇÃO (TESTE) ---
+    // --- BOTÕES DE AÇÃO ---
+    
+    // 1. Simular (Teste)
     if (btnSimular) {
         btnSimular.addEventListener('click', async () => {
-            if (!socket || !socket.id) return alert("Sem conexão Socket.");
+            if (!socket || !socket.id) return alert("Sem conexão com servidor.");
             
             const nome = document.getElementById('modal-nome').value || "Tester";
             const telefone = document.getElementById('modal-telefone').value || "999999999";
             const fakeId = "test_" + Date.now();
             
             sessionStorage.setItem('raspadinha_payment_id', fakeId);
-            btnSimular.textContent = "Simulando..."; btnSimular.disabled = true;
+            btnSimular.textContent = "Simulando..."; 
+            btnSimular.disabled = true;
 
             try {
                 await fetch('/api/debug/simular', {
@@ -95,11 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ socketId: socket.id, nome, telefone, paymentId: fakeId })
                 });
-            } catch (e) { alert("Erro simulação"); btnSimular.disabled = false; }
+            } catch (e) { 
+                alert("Erro na simulação"); 
+                btnSimular.disabled = false; 
+            }
         });
     }
 
-    // --- BOTÃO GERAR PIX REAL ---
+    // 2. Gerar Pix Real
     if (btnGerarPix) {
         btnGerarPix.addEventListener('click', async () => {
             const nome = document.getElementById('modal-nome').value;
@@ -127,17 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const btnCopiarPix = document.getElementById('btn-copiar-pix');
+    // 3. Copiar Pix
     if(btnCopiarPix) {
         btnCopiarPix.addEventListener('click', () => {
             const input = document.getElementById('pix-copia-cola');
             input.select();
             navigator.clipboard.writeText(input.value);
-            btnCopiarPix.textContent = "Copiado!"; setTimeout(() => { btnCopiarPix.textContent = "Copiar Código"; }, 2000);
+            btnCopiarPix.textContent = "Copiado!"; 
+            setTimeout(() => { btnCopiarPix.textContent = "Copiar Código"; }, 2000);
         });
     }
 
-    // --- SOCKET (Ouvindo Aprovação) ---
+    // --- SOCKET LISTENERS ---
     if (socket) {
         socket.on('pagamentoAprovado', (data) => {
             if (data.paymentId === sessionStorage.getItem('raspadinha_payment_id')) {
@@ -160,14 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================
-    // LÓGICA DA RASPADINHA BLINDADA
+    // LÓGICA DA RASPADINHA (Sem erro 404, Sem erro SPRAY)
     // ==========================================================
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
         requestAnimationFrame(() => {
             try {
-                // 1. Configura o Prêmio (Fundo)
+                // 1. Define o Prêmio
                 if (valorPremio > 0) {
                     raspadinhaFundo.classList.remove('nao-ganhou');
                     raspadinhaTexto.textContent = formatarBRL(valorPremio);
@@ -177,54 +181,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const width = raspadinhaContainer.clientWidth;
-                // Se a largura for 0, forçamos um valor mínimo para evitar erro
                 const finalWidth = width > 0 ? width : 300; 
 
+                // Limpa canvas antigo
                 const oldCanvas = raspadinhaContainer.querySelector('canvas');
                 if(oldCanvas) oldCanvas.remove();
 
+                // 2. Cria Raspadinha
                 const sc = new ScratchCard('#raspadinha-container', {
-                    scratchType: 1, // 1 = SPRAY
+                    scratchType: 1, // 1 = SPRAY (Corrige erro undefined)
                     containerWidth: finalWidth,
-                    containerHeight: finalWidth * 0.5625, // 16:9
-                    
-                    // AQUI: Usamos a nova imagem base64 sólida
-                    imageForwardSrc: IMG_TINTA_BASE64, 
-                    
-                    htmlBackground: '', // Fundo HTML transparente
-                    clearZoneRadius: 25, // Tamanho do dedo
-                    nPoints: 30, // Densidade
-                    pointSize: 10, // Tamanho do ponto
+                    containerHeight: finalWidth * 0.5625,
+                    imageForwardSrc: IMG_TINTA_BASE64, // (Corrige erro 404)
+                    htmlBackground: '', 
+                    clearZoneRadius: 25,
+                    nPoints: 30,
+                    pointSize: 10,
                     callback: () => {
                         if (valorPremio > 0) {
                             raspadinhaStatus.textContent = `PARABÉNS! Ganhou ${formatarBRL(valorPremio)}!`;
                             raspadinhaStatus.style.color = "var(--color-raspadinha-gold)";
                         } else {
                             raspadinhaStatus.textContent = "Tente novamente!";
+                            raspadinhaStatus.style.color = "#555";
                         }
                         btnJogarNovamente.style.display = 'block';
                     }
                 });
 
                 sc.init().then(() => {
-                    console.log("Raspadinha Prateada Carregada!");
-                    // Força o canvas a ser visível
+                    console.log("Raspadinha Pronta!");
                     const canvas = raspadinhaContainer.querySelector('canvas');
                     if(canvas) {
                         canvas.style.width = '100%';
                         canvas.style.height = '100%';
                     }
                 }).catch((err) => {
-                    console.error("Erro crítico no init:", err);
+                    console.error("Erro init:", err);
                 });
 
-            } catch (e) {
-                console.error("Erro fatal:", e);
-            }
+            } catch (e) { console.error("Erro fatal:", e); }
         });
     }
 
-    // --- Recuperar Prêmios ---
+    // --- CONSULTAR PRÊMIOS ---
     const formRecuperar = document.getElementById('form-recuperar-premios');
     const inputTelefoneRecuperar = document.getElementById('modal-telefone-recuperar');
     const btnChecarPremios = document.getElementById('btn-checar-premios');
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalPremios.classList.add('modal-overlay');
         modalPremios.style.display = 'flex';
         let html = `<div class="modal-content" style="max-width: 600px;">
-                <span class="modal-close" id="modal-premios-fechar">&times;</span>
+                <span class="modal-close" id="modal-premios-fechar" style="cursor:pointer;">&times;</span>
                 <h2 class="title-gradient">Meus Prêmios</h2><div id="modal-meus-premios-lista">`;
         if (premios && premios.length > 0) {
             premios.forEach(p => {
@@ -264,6 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `</div></div>`;
         modalPremios.innerHTML = html;
         document.body.appendChild(modalPremios);
-        modalPremios.addEventListener('click', (e) => { if (e.target.id === 'modal-premios-fechar' || e.target === modalPremios) modalPremios.remove(); });
+        
+        // Evento para fechar
+        modalPremios.addEventListener('click', (e) => { 
+            if (e.target.id === 'modal-premios-fechar' || e.target === modalPremios) modalPremios.remove(); 
+        });
     }
 });
