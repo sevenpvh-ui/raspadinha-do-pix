@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Configuração de Socket.IO ---
     let socket;
     try {
         socket = io();
@@ -10,9 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnComprar) { btnComprar.disabled = true; btnComprar.textContent = "Erro de Conexão"; }
     }
 
+    // --- Variáveis Globais ---
     let PRECO_RASPADINHA_ATUAL = 1.00;
     let PREMIO_MAXIMO_ATUAL = 100.00;
 
+    // --- Elementos DOM ---
     const cardComprar = document.getElementById('card-comprar-raspadinha');
     const cardJogo = document.getElementById('card-area-jogo');
     const btnComprarRaspadinha = document.getElementById('btn-comprar-raspadinha');
@@ -42,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputTelefoneRecuperar = document.getElementById('modal-telefone-recuperar');
     const btnChecarPremios = document.getElementById('btn-checar-premios');
 
+    // --- Funções Auxiliares ---
     function formatarBRL(valor) {
         const numero = parseFloat(valor);
         if (isNaN(numero)) return 'R$ --,--';
@@ -60,12 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (raspadinhaPremioMaximoEl) raspadinhaPremioMaximoEl.textContent = formatarBRL(PREMIO_MAXIMO_ATUAL);
                 if (modalPrecoEl) modalPrecoEl.textContent = formatarBRL(PRECO_RASPADINHA_ATUAL);
             }
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     }
     carregarConfig();
 
+    // --- Event Listeners ---
     if (btnComprarRaspadinha) {
         btnComprarRaspadinha.addEventListener('click', () => {
             if (!socket || !socket.connected) { alert("Erro de conexão. Recarregue."); return; }
@@ -125,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Socket Listeners ---
     if (socket) {
         socket.on('connect', () => { checarPagamentoPendente(); });
         socket.on('configAtualizada', (data) => {
@@ -174,14 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNÇÃO DE INICIAR O JOGO ---
+    // ==========================================================
+    // --- FUNÇÃO DE INICIAR O JOGO (CORRIGIDA) ---
+    // ==========================================================
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
-        // Usa requestAnimationFrame para garantir que o display:block já foi aplicado
+        // Aguarda o navegador desenhar a tela
         requestAnimationFrame(() => {
             try {
-                // Define o texto do prêmio
+                // Define o texto do prêmio no fundo
                 if (valorPremio > 0) {
                     raspadinhaFundo.classList.remove('nao-ganhou');
                     raspadinhaTextoPremio.textContent = formatarBRL(valorPremio);
@@ -191,17 +197,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const containerWidth = raspadinhaContainer.clientWidth;
-                if (containerWidth === 0) throw new Error("Container largura 0");
+                if (containerWidth === 0) console.warn("Aviso: Largura do container é 0.");
 
+                // Limpa qualquer canvas antigo (prevenção de duplicação)
+                const canvasAntigo = raspadinhaContainer.querySelector('canvas');
+                if (canvasAntigo) canvasAntigo.remove();
+
+                // Inicializa a biblioteca com o tipo de raspagem CORRETO
                 const sc = new ScratchCard('#raspadinha-container', {
-                    scratchType: 'line',
+                    // AQUI ESTAVA O ERRO: 'line' não funciona bem. Usamos SPRAY.
+                    scratchType: ScratchCard.SCRATCH_TYPE.SPRAY, 
                     containerWidth: containerWidth,
-                    containerHeight: containerWidth * 0.5625,
-                    // CERTIFIQUE-SE QUE A IMAGEM EXISTE NA PASTA PUBLIC COM ESTE NOME:
-                    imageForwardSrc: 'imagem-raspadinha.png', 
-                    htmlBackground: '',
-                    clearZoneRadius: 30,
-                    percentToFinish: 70,
+                    containerHeight: containerWidth * 0.5625, // Proporção 16:9
+                    imageForwardSrc: 'imagem-raspadinha.png', // CERTIFIQUE-SE QUE O NOME DO ARQUIVO É ESTE (minusculas)
+                    htmlBackground: '', // O fundo já está no HTML (div raspadinha-fundo)
+                    clearZoneRadius: 40, // Tamanho do "dedo"
+                    nPoints: 100, // Densidade do spray
+                    pointSize: 4, // Tamanho dos pontos do spray
+                    percentToFinish: 60, // Raspar 60% para finalizar
                     callback: () => {
                         if (valorPremio > 0) {
                             raspadinhaStatus.textContent = `PARABÉNS! Você ganhou ${formatarBRL(valorPremio)}!`;
@@ -217,17 +230,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 sc.init().then(() => {
                     console.log("Raspadinha iniciada com sucesso.");
                 }).catch((err) => {
-                    console.error("Erro init:", err);
-                    raspadinhaStatus.textContent = "Erro ao carregar a imagem. Verifique o nome do arquivo no servidor.";
+                    console.error("Erro ao iniciar raspadinha:", err);
+                    raspadinhaStatus.textContent = "Erro ao carregar a imagem. Verifique se 'imagem-raspadinha.png' existe na pasta public.";
                     raspadinhaStatus.style.color = "red";
                 });
 
             } catch (err) {
-                console.error("Erro crítico:", err);
+                console.error("Erro crítico no jogo:", err);
             }
         });
     }
 
+    // --- Recuperar Prêmios ---
     if (formRecuperar) {
         formRecuperar.addEventListener('submit', async (e) => {
             e.preventDefault();
