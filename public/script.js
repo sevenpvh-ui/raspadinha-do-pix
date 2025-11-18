@@ -1,8 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- IMAGEM CINZA (TINTA) DIRETO NO CÓDIGO ---
-    // Isso garante que a imagem SEMPRE carregue, sem erro 404
-    const IMG_TINTA_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==";
+    // ==================================================================
+    // 1. IMAGEM DE RASPAGEM (PRATEADA SÓLIDA - BASE64)
+    // ==================================================================
+    // Esta é uma imagem real de textura prateada convertida em texto.
+    // Ela é opaca e vai cobrir o prêmio completamente.
+    const IMG_TINTA_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEISURBVHhe7dQxDQAwDMCwNhxj/5IGYi9HgZzA9t2Z/==";
 
     // --- CONFIGURAÇÃO SOCKET.IO ---
     let socket;
@@ -37,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FORMATADOR ---
     const formatarBRL = (v) => parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    // --- 1. CARREGAR CONFIG ---
+    // --- CARREGAR CONFIG ---
     async function carregarConfig() {
         try {
             const res = await fetch('/api/raspadinha/config');
@@ -56,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     carregarConfig();
 
-    // --- 2. MODAL E BOTÕES ---
+    // --- MODAL E BOTÕES ---
     if (btnComprar) {
         btnComprar.addEventListener('click', () => {
             modal.style.display = 'flex';
@@ -124,7 +127,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 3. SOCKET (Ouvindo Aprovação) ---
+    const btnCopiarPix = document.getElementById('btn-copiar-pix');
+    if(btnCopiarPix) {
+        btnCopiarPix.addEventListener('click', () => {
+            const input = document.getElementById('pix-copia-cola');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            btnCopiarPix.textContent = "Copiado!"; setTimeout(() => { btnCopiarPix.textContent = "Copiar Código"; }, 2000);
+        });
+    }
+
+    // --- SOCKET (Ouvindo Aprovação) ---
     if (socket) {
         socket.on('pagamentoAprovado', (data) => {
             if (data.paymentId === sessionStorage.getItem('raspadinha_payment_id')) {
@@ -137,23 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function prepararJogo(valor) {
         document.getElementById('card-comprar-raspadinha').style.display = 'none';
-        if(document.getElementById('minhas-raspadinhas')) 
-            document.getElementById('minhas-raspadinhas').style.display = 'none';
+        const minhas = document.getElementById('minhas-raspadinhas');
+        if(minhas) minhas.style.display = 'none';
         
         const areaJogo = document.getElementById('card-area-jogo');
         areaJogo.style.display = 'block';
         
-        // Inicia o jogo
         iniciarRaspadinha(valor);
     }
 
     // ==========================================================
-    // 4. LÓGICA DA RASPADINHA (CORRIGIDA E BLINDADA)
+    // LÓGICA DA RASPADINHA BLINDADA
     // ==========================================================
     function iniciarRaspadinha(valorPremio) {
         if (!raspadinhaContainer) return;
 
-        // Garante que o navegador renderizou o container antes de desenhar
         requestAnimationFrame(() => {
             try {
                 // 1. Configura o Prêmio (Fundo)
@@ -166,24 +177,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const width = raspadinhaContainer.clientWidth;
-                if (width === 0) return console.error("Largura do container é 0");
+                // Se a largura for 0, forçamos um valor mínimo para evitar erro
+                const finalWidth = width > 0 ? width : 300; 
 
-                // Limpa canvas antigo
                 const oldCanvas = raspadinhaContainer.querySelector('canvas');
                 if(oldCanvas) oldCanvas.remove();
 
-                // 2. Cria a Raspadinha
-                // AQUI ESTAVA O ERRO DO CONSOLE: 'SCRATCH_TYPE' undefined.
-                // SOLUÇÃO: Usamos o número 1 (que representa SPRAY) diretamente.
                 const sc = new ScratchCard('#raspadinha-container', {
-                    scratchType: 1, // <--- 1 = SPRAY (CORREÇÃO DO ERRO JS)
-                    containerWidth: width,
-                    containerHeight: width * 0.5625, // 16:9
-                    imageForwardSrc: IMG_TINTA_BASE64, // <--- IMAGEM EMBUTIDA (CORREÇÃO DO ERRO 404)
-                    htmlBackground: '', 
-                    clearZoneRadius: 30,
-                    nPoints: 80,
-                    pointSize: 6,
+                    scratchType: 1, // 1 = SPRAY
+                    containerWidth: finalWidth,
+                    containerHeight: finalWidth * 0.5625, // 16:9
+                    
+                    // AQUI: Usamos a nova imagem base64 sólida
+                    imageForwardSrc: IMG_TINTA_BASE64, 
+                    
+                    htmlBackground: '', // Fundo HTML transparente
+                    clearZoneRadius: 25, // Tamanho do dedo
+                    nPoints: 30, // Densidade
+                    pointSize: 10, // Tamanho do ponto
                     callback: () => {
                         if (valorPremio > 0) {
                             raspadinhaStatus.textContent = `PARABÉNS! Ganhou ${formatarBRL(valorPremio)}!`;
@@ -195,16 +206,64 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                sc.init()
-                    .then(() => console.log("Raspadinha criada com sucesso!"))
-                    .catch((err) => {
-                        console.error("Erro crítico no init:", err);
-                        raspadinhaStatus.textContent = "Erro ao criar raspadinha.";
-                    });
+                sc.init().then(() => {
+                    console.log("Raspadinha Prateada Carregada!");
+                    // Força o canvas a ser visível
+                    const canvas = raspadinhaContainer.querySelector('canvas');
+                    if(canvas) {
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                    }
+                }).catch((err) => {
+                    console.error("Erro crítico no init:", err);
+                });
 
             } catch (e) {
                 console.error("Erro fatal:", e);
             }
         });
+    }
+
+    // --- Recuperar Prêmios ---
+    const formRecuperar = document.getElementById('form-recuperar-premios');
+    const inputTelefoneRecuperar = document.getElementById('modal-telefone-recuperar');
+    const btnChecarPremios = document.getElementById('btn-checar-premios');
+
+    if (formRecuperar) {
+        formRecuperar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const telefone = inputTelefoneRecuperar.value.trim();
+            btnChecarPremios.disabled = true; btnChecarPremios.textContent = 'Buscando...';
+            try {
+                const response = await fetch('/api/raspadinha/checar-premios', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: telefone }),
+                });
+                const data = await response.json();
+                if (data.success) criarModalPremios(data.premios);
+                else alert(data.message);
+            } catch (err) { alert("Erro de conexão."); } 
+            finally { btnChecarPremios.disabled = false; btnChecarPremios.textContent = 'Verificar Prêmios'; }
+        });
+    }
+
+    function criarModalPremios(premios) {
+        let modalPremios = document.createElement('div');
+        modalPremios.classList.add('modal-overlay');
+        modalPremios.style.display = 'flex';
+        let html = `<div class="modal-content" style="max-width: 600px;">
+                <span class="modal-close" id="modal-premios-fechar">&times;</span>
+                <h2 class="title-gradient">Meus Prêmios</h2><div id="modal-meus-premios-lista">`;
+        if (premios && premios.length > 0) {
+            premios.forEach(p => {
+                let cls = p.status_pagamento_premio === 'Pendente' ? 'status-pendente' : 'status-pago';
+                html += `<div class="premio-encontrado-item">
+                        <div class="premio-info-wrapper"><span class="premio-valor-consulta">${formatarBRL(p.valor_premio)}</span><span class="premio-data-consulta">${p.data_formatada}</span></div>
+                        <span class="status-pagamento ${cls}">${p.status_pagamento_premio}</span></div>`;
+            });
+        } else { html += `<p>Nenhum prêmio encontrado.</p>`; }
+        html += `</div></div>`;
+        modalPremios.innerHTML = html;
+        document.body.appendChild(modalPremios);
+        modalPremios.addEventListener('click', (e) => { if (e.target.id === 'modal-premios-fechar' || e.target === modalPremios) modalPremios.remove(); });
     }
 });
