@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raspadinha do Pix - Raspe e Ganhe!</title>
-    <link rel="stylesheet" href="style.css?v=6.0"> 
+    <title>Raspadinha do Pix</title>
+    <link rel="stylesheet" href="style.css?v=8.0"> 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/scratchcard-js@1.5.0/build/scratchcard.min.js"></script>
 </head>
@@ -21,17 +21,15 @@
                 <span class="premio-valor premio-valor-raspadinha" id="raspadinha-premio-maximo">R$ 100,00</span>
                 <p class="premio-sub">Raspe e ganhe na hora!</p>
             </div>
-            <button id="btn-comprar-raspadinha" class="btn-comprar btn-destaque btn-jogue-raspadinha">
-                Comprar Raspadinha (<span id="raspadinha-preco">R$ 2,00</span>)
-            </button>
-            <p class="info-raspadinha" style="margin-top: 15px;">(O prêmio é instantâneo e pago via PIX!)</p>
+            <button id="btn-comprar-raspadinha" class="btn-comprar btn-destaque btn-jogue-raspadinha">Comprar Raspadinha</button>
+            <p class="info-raspadinha" style="margin-top:15px;">(Prêmio pago via PIX!)</p>
         </section>
         
         <section id="card-area-jogo" class="card" style="display: none;">
             <h2>Raspe com o dedo ou mouse!</h2>
             <div id="raspadinha-container" class="raspadinha-container">
                 <div id="raspadinha-fundo" class="raspadinha-fundo">
-                    <h3 id="raspadinha-texto-premio">R$ 100,00</h3>
+                    <h3 id="raspadinha-texto-premio">...</h3>
                 </div>
             </div>
             <p id="raspadinha-status" class="raspadinha-status-info">Boa sorte!</p>
@@ -42,7 +40,7 @@
             <h2>Já jogou? Consulte seus prêmios!</h2>
             <form id="form-recuperar-premios" style="max-width: 450px; margin: 0 auto;">
                 <div class="form-grupo">
-                    <label for="modal-telefone-recuperar" style="font-weight: 700;">Seu Telefone (com DDD):</label>
+                    <label>Seu Telefone (com DDD):</label>
                     <input type="tel" id="modal-telefone-recuperar" placeholder="Ex: 69912345678" required>
                 </div>
                 <button type="submit" id="btn-checar-premios" class="btn-comprar btn-destaque" style="margin-top: 15px;">Verificar Prêmios</button>
@@ -50,41 +48,37 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2023 Raspadinha do Pix.</p>
-        <div class="legal-links"><p class="legal-warning">Proibido para menores de 18 anos.</p></div>
-    </footer>
-
     <div id="modal-checkout" class="modal-overlay">
         <div class="modal-content">
              <span class="modal-close">&times;</span>
             <div id="etapa-dados">
-                <h2 class="title-gradient">Comprar Raspadinha</h2>
+                <h2 class="title-gradient">Comprar</h2>
                 <form id="form-checkout">
-                    <div class="form-grupo"><label>Seu Nome:</label><input type="text" id="modal-nome" placeholder="Nome" required></div>
-                    <div class="form-grupo"><label>Telefone (PIX):</label><input type="tel" id="modal-telefone" placeholder="DDD + Número" required></div>
+                    <div class="form-grupo"><label>Nome:</label><input type="text" id="modal-nome" required></div>
+                    <div class="form-grupo"><label>Telefone:</label><input type="tel" id="modal-telefone" required></div>
                 </form>
                 <div id="resumo-preco"><p>Valor: <strong id="modal-preco" class="text-pix">R$ 2,00</strong></p></div>
+                
                 <button id="btn-gerar-pix" class="btn-comprar btn-destaque">Gerar PIX</button>
                 
-                <button id="btn-simular-compra" class="btn-comprar btn-comprar-azul" style="margin-top: 10px; opacity: 0.7;">[TESTE] Simular Compra Grátis</button>
+                <button id="btn-simular-teste" class="btn-comprar" style="margin-top:15px; background-color:#555; font-size:0.9em;">⚡ SIMULAR COMPRA (TESTE)</button>
             </div>
 
-            <div id="etapa-pix" style="display: none;">
+            <div id="etapa-pix" style="display:none;">
                 <h2 class="title-gradient">Pague com PIX</h2>
-                <div id="pix-qrcode-container"><img id="pix-qrcode-img" src="" alt="QR Code" style="max-width: 250px;"></div>
-                <div class="form-grupo" style="margin-top: 15px;">
-                    <input type="text" id="pix-copia-cola" readonly style="text-align: center;">
-                    <button id="btn-copiar-pix" class="btn-comprar btn-comprar-azul" style="margin-top: 5px;">Copiar</button>
+                <div id="pix-qrcode-container"><img id="pix-qrcode-img" src="" style="max-width:250px;"></div>
+                <div class="form-grupo" style="margin-top:15px;">
+                    <input type="text" id="pix-copia-cola" readonly style="text-align:center;">
+                    <button id="btn-copiar-pix" class="btn-comprar btn-comprar-azul" style="margin-top:5px;">Copiar</button>
                 </div>
-                <div id="aguardando-pagamento">
-                    <div class="loader-pix"></div><strong>Aguardando Pagamento...</strong>
+                <div id="aguardando-pagamento" style="display:none;">
+                    <div class="loader-pix"></div><strong>Aguardando...</strong>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js?v=6.0"></script>
+    <script src="script.js?v=8.0"></script>
 </body>
 </html>
