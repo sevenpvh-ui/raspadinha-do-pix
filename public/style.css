@@ -207,7 +207,7 @@ footer {
 }
 
 /* ==============================================================
-=== ÁREA CRÍTICA: CORREÇÃO DE RASPADINHA E SCROLL (FINAL) === 
+=== CONFIGURAÇÃO DA ÁREA DE JOGO (Z-INDEX CRÍTICO) === 
 ==============================================================
 */
 
@@ -222,18 +222,15 @@ footer {
     aspect-ratio: 16 / 9; 
 }
 
-/* O Prémio (Fica em BAIXO de tudo) */
+/* O Prémio (Camada de Fundo) */
 .raspadinha-fundo {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     display: flex; justify-content: center; align-items: center;
     background: linear-gradient(135deg, #fefae0, #faedcd);
     
-    /* TRUQUE VITAL: Impede que o texto receba cliques ou seleção. 
-       Assim, o clique passa direto ou fica no canvas acima. */
+    /* IMPORTANTE: Z-Index 1 (Fundo) */
     z-index: 1;
-    pointer-events: none;
-    user-select: none;
 }
 
 .raspadinha-fundo h3 {
@@ -241,11 +238,11 @@ footer {
     font-size: 3em; font-weight: 900;
     color: var(--color-text-heading);
     margin: 0; padding: 0; text-align: center;
+    user-select: none; /* Impede seleção de texto */
 }
 .raspadinha-fundo.nao-ganhou h3 { font-size: 2em; color: var(--color-text-body); }
 
-/* O Canvas de Raspadinha (Gerado pelo Script) */
-/* Esta regra garante que ele fique EM CIMA do prêmio e TRAVE o scroll */
+/* O Canvas de Raspadinha (Criado pelo JS) */
 .raspadinha-container canvas {
     position: absolute !important;
     top: 0;
@@ -253,11 +250,15 @@ footer {
     width: 100% !important;
     height: 100% !important;
     
-    z-index: 10 !important; /* Força ficar no TOPO */
-    cursor: grab;
+    /* IMPORTANTE: Z-Index 10 (Frente) */
+    z-index: 10 !important; 
     
-    /* CORREÇÃO MOBILE: Impede a tela de rolar quando toca aqui */
+    cursor: grab;
+    /* IMPORTANTE: Impede o scroll ao tocar no canvas */
     touch-action: none !important; 
+}
+.raspadinha-container canvas:active {
+    cursor: grabbing;
 }
 
 .raspadinha-status-info {
